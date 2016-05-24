@@ -1,151 +1,109 @@
 /****************************************
-Curva
-Esta clase abstracta representa a una curva que se dibuja en pantalla
+SupBarrido
+Esta clase abstracta representa a una superficie generada a partir de un poligono plano que se arrastra por un recorrido 3D
 ****************************************/
 
-var Curva = Geometria.extend({
-	initialize: function(puntos)
+var SupBarrido = Geometria.extend({
+	//Se puede agregar función de escalado
+	initialize: function(poligono,puntosRecorrido,basesRecorrido)
 	{
-		this.bases = null;
-		this.base0 = null;
-		this.base1 = null;
-		this.base2 = null;
-		this.base3 = null;
-
-		this.base0der = null;
-		this.base1der = null;
-		this.base2der = null;
-		this.base3der = null;
-		
-		this.minU = 0;
-		this.maxU = 1;
-		
-		this.tramos = 1;	//Por defecto, se modifica automaticamente cuando se setean los puntos de control
-		this.deltaU = 0.01; //Valor por defecto
-							// es el paso de avance sobre la curva cuanto mas chico mayor es el detalle (parametro local, no global)
-		this.puntosDeControl = null; //Lista de listas (cada lista interior es un punto xyz)
-
-		
-
-		//Hace falta declarar las rows y cols aca?
-
-		this.setBases();
-		this.setPuntosDeControl(puntos);
+		//Se supone como la base del poligono la canónica
+		this.poligono = poligono.slice(0); //Lista de listas (cada lista interior es un punto xyz)
+		this.puntosRecorrido = puntosRecorrido.slice(0); //el primer punto y el último deben ser iguales?	
+		//NORMALIZAR BASES
+		this.basesRecorrido = basesRecorrido.slice(0); //basesRecorrido = [[b1,b2,b3],[b4,b5,b6],....] cada b es un vector
 		Geometria.prototype.initialize.call(this);
-
+	/*
 		this.texture = gl.createTexture();
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
 		var whitePixel = new Uint8Array([255, 255, 255, 255]);
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, whitePixel);
-		
+	*/	
 		this.useTexture = 0.0;
-	},
 	
-	setBases: function(){},
+	},
 
-	getIndiceInicialTramo: function(tramo){},
-	
-	getTramosFromPuntos: function(puntos){},
-
-	setDeltaU: function(delta)
-	//el delta debe ser un valor local entre 0 y 1
+	matrizCambioDeBase: function(baseRecorrido)
 	{
-		if ( (delta > 0) && (delta < 1) )
-			this.deltaU = delta;
+		var matriz = mat3.create();
+		var base;
+		for (var col = 0; col < baseRecorrido.length; col++)
+		{
+			base = baseRecorrido[col];
+			for (var fil = 0; fil < base.length; fil++)
+			{
+				matriz[fil * baseRecorrido.length + col] = base[fil];
+			}
+		}
+		return matriz;
 	},
 
-	setPuntosDeControl: function(puntos)
-	//puntos debe ser una lista de puntos, cada punto deberia ser un lista de 3 items (x,y,z)
+	transformarPuntos: function(puntos,puntoRecorrido,baseRecorrido)
 	{
-		var tramos = this.getTramosFromPuntos(puntos);
-		this.puntosDeControl = puntos.slice();
-		this.maxU = tramos * 1.000;
-		this.tramos = tramos;
+		var punto;
+		var puntosTransformados = [];
+		var puntoTransformado;
+		var cambioDeBase = this.matrizCambioDeBase(baseRecorrido);
+		for (var i = 0; i < puntos.length; i++)
+		{
+			punto = vec3.fromValues(puntos[i][0],puntos[i][1],puntos[i][2]);
+			puntoTransformado = vec3.create();
+			vec3.transformMat3(puntoTransformado, punto, cambioDeBase);
+			//puntoTransformado = cambioDeBase * punto;
+			puntoTransformado = vec3.fromValues(puntoTransformado[0]+puntoRecorrido[0], puntoTransformado[1]+puntoRecorrido[1],puntoTransformado[2]+puntoRecorrido[2]);
+			puntosTransformados.push(puntoTransformado);
+		}
+		return puntosTransformados;
 	},
 
-	CurvaCubica: function(u)
-	//u debe ser un valor entre 0 y maxU
+	createGrid: function()
 	{
-		// devuelve un punto de la curva segun el parametro u
-		var uLocal = u % 1;
-		var tramo = Math.floor(u) + 1;
-		var i = this.getIndiceInicialTramo(tramo);
-
-		var p0=this.puntosDeControl[i];
-		var p1=this.puntosDeControl[i+1];
-		var p2=this.puntosDeControl[i+2];
-		var p3=this.puntosDeControl[i+3];
-
-		var punto=new Object();
-
-		punto.x=this.base0(uLocal) * p0[0] + this.base1(uLocal) * p1[0] + this.base2(uLocal) * p2[0] + this.base3(uLocal) * p3[0];
-		punto.y=this.base0(uLocal) * p0[1] + this.base1(uLocal) * p1[1] + this.base2(uLocal) * p2[1] + this.base3(uLocal) * p3[1];
-		punto.z=this.base0(uLocal) * p0[2] + this.base1(uLocal) * p1[2] + this.base2(uLocal) * p2[2] + this.base3(uLocal) * p3[2];
-
-		return punto;
-	},
-
-	CurvaCubicaDerivadaPrimera: function(u){
-
-		var uLocal = u % 1;
-		var tramo = Math.floor(u) + 1;
-		var i = this.getIndiceInicialTramo(tramo);
-
-		var p0=this.puntosDeControl[i];
-		var p1=this.puntosDeControl[i+1];
-		var p2=this.puntosDeControl[i+2];
-		var p3=this.puntosDeControl[i+3];
-
-		var punto=new Object();
-
-		punto.x=this.base0der(uLocal)*p0[0]+this.base1der(uLocal)*p1[0]+this.base2der(uLocal)*p2[0]+this.base3der(uLocal)*p3[0];
-		punto.y=this.base0der(uLocal)*p0[1]+this.base1der(uLocal)*p1[1]+this.base2der(uLocal)*p2[1]+this.base3der(uLocal)*p3[1];
-		punto.z=this.base0der(uLocal)*p0[2]+this.base1der(uLocal)*p1[2]+this.base2der(uLocal)*p2[2]+this.base3der(uLocal)*p3[2];
-
-		return punto;
-	},
-
-	createGrid: function(){
-
-		this.draw_mode=gl.LINE_STRIP; //Estas tres definiciones tienen que estar aca
-		this.rows = 1
-		this.cols = Math.floor(this.tramos / this.deltaU);
-		var u = 0;
-		var col;
+		this.draw_mode=gl.TRIANGLE_STRIP; //Estas tres definiciones tienen que estar aca
 		this.tangent_buffer = []; //Esta en null por defecto
-		var vec_product = vec3.create();
+
+		this.cols = this.poligono.length;
+		this.rows = this.puntosRecorrido.length;
+		
+		var punto;
+		var puntos;
+		var puntoRecorrido;
+		var baseRecorrido;
+		
+		var tangente = vec3.create();
 		var normal = vec3.create();
 					
-		for (col = 0; col < this.cols; col++)
+		for (var row = 0; row < this.rows; row++)
 		{
-			var punto=this.CurvaCubica(u);
-			this.position_buffer.push(punto.x);
-			this.position_buffer.push(punto.y);
-			this.position_buffer.push(punto.z);
+			puntoRecorrido = this.puntosRecorrido[row];
+			baseRecorrido = this.basesRecorrido[row];
+			puntos = this.transformarPuntos(this.poligono, puntoRecorrido, baseRecorrido);
+			for (var col = 0; col < this.cols; col++)
+			{
+				punto = puntos[col];
+				this.position_buffer.push(punto[0]);
+				this.position_buffer.push(punto[1]);
+				this.position_buffer.push(punto[2]);
 
-			this.color_buffer.push(1.0);
-			this.color_buffer.push(1.0); //Color default
-			this.color_buffer.push(1.0);
+				this.color_buffer.push(0.1);
+				this.color_buffer.push(0.5); //Color default
+				this.color_buffer.push(0.1);
 
-			var puntoDer = this.CurvaCubicaDerivadaPrimera(u);
-			this.tangent_buffer.push(puntoDer.x);
-			this.tangent_buffer.push(puntoDer.y);
-			this.tangent_buffer.push(puntoDer.z);
-			
-			var tangente = vec3.fromValues(puntoDer.x, puntoDer.y, puntoDer.z);
-			var ejez = vec3.fromValues(0,0,1);
-			vec3.cross(vec_product,ejez,tangente);
-			vec3.cross(normal,vec_product,tangente);
+				var point = vec3.fromValues(punto[0], punto[1], punto[2]);
+				//vec3.cross(tangente, eje, point);
 
-			this.normals_buffer.push(normal.x);
-			this.normals_buffer.push(normal.y); //La implementacion de normales solo sirve si Z nunca es paralela a la tangente
-			this.normals_buffer.push(normal.z);
+				this.tangent_buffer.push(tangente[0]);
+				this.tangent_buffer.push(tangente[1]);
+				this.tangent_buffer.push(tangente[2]);
+				
+				//vec3.cross(normal, tangente ,eje);
 
-			this.texture_coord_buffer.push(0.0);
-			this.texture_coord_buffer.push(0.0);
-			
-			u += this.deltaU;
-			//if (u==0) ctx.moveTo(punto.x,punto.y);
+				this.normals_buffer.push(punto[0]);
+				this.normals_buffer.push(punto[1]); //MODIFICAR IMPLEMENTACION TANGENTE Y NORMAL
+				this.normals_buffer.push(punto[2]);
+
+				this.texture_coord_buffer.push(0.0);
+				this.texture_coord_buffer.push(0.0);
+			}
 		}
 	
 	}

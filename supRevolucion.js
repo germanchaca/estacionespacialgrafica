@@ -1,11 +1,12 @@
 /****************************************
 SupRevolucion
-Esta clase abstracta representa a una superficie generada a partir de un perfil que se rota respecto a un eje
+Esta clase abstracta representa a una superficie generada a partir de un perfil plano que se rota respecto a un eje
 ****************************************/
 
 var SupRevolucion = Geometria.extend({
 	initialize: function(perfil,eje,angulo,paso)
 	{
+		//Se podría implementar el perfil como una curva para obtener mas precision
 		this.perfil = perfil.slice(0); //Lista de listas (cada lista interior es un punto xyz)
 		this.eje = eje;
 		this.angulo = angulo;
@@ -17,9 +18,9 @@ var SupRevolucion = Geometria.extend({
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
 		var whitePixel = new Uint8Array([255, 255, 255, 255]);
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, whitePixel);
-		
+	*/	
 		this.useTexture = 0.0;
-	*/
+	
 	},
 
 	rotarPuntos: function(puntos,angulo,eje)
@@ -32,7 +33,7 @@ var SupRevolucion = Geometria.extend({
 		mat4.rotate( rotacion, rotacion, angulo, eje);
 		for (var i = 0; i < puntos.length; i++)
 		{
-			punto = vec4.fromValues(puntos[i][0],puntos[i][1],puntos[i][2],1);
+			punto = vec3.fromValues(puntos[i][0],puntos[i][1],puntos[i][2]);
 			puntoRotado = vec3.create();
 			vec3.transformMat4(puntoRotado, punto, rotacion);
 			puntosRotados.push(puntoRotado);
@@ -66,9 +67,9 @@ var SupRevolucion = Geometria.extend({
 				this.position_buffer.push(punto[1]);
 				this.position_buffer.push(punto[2]);
 
-				this.color_buffer.push(1.0);
-				this.color_buffer.push(1.0); //Color default
-				this.color_buffer.push(1.0);
+				this.color_buffer.push(0.1);
+				this.color_buffer.push(0.5); //Color default
+				this.color_buffer.push(0.1);
 
 				var point = vec3.fromValues(punto[0], punto[1], punto[2]);
 				vec3.cross(tangente, eje, point);
@@ -77,7 +78,7 @@ var SupRevolucion = Geometria.extend({
 				this.tangent_buffer.push(tangente[1]);
 				this.tangent_buffer.push(tangente[2]);
 				
-				vec3.cross(normal, eje ,tangente);
+				vec3.cross(normal, tangente ,eje);
 
 				this.normals_buffer.push(normal[0]);
 				this.normals_buffer.push(normal[1]); //Revisar implementacion normales y tangentes
