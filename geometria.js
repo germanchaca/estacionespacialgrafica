@@ -1,15 +1,14 @@
 /****************************************
-ObjetoGrafico
+Geometria
 Esta clase representa un objeto que se dibuja en pantalla
 ****************************************/
 
-var ObjetoGrafico = function() {
-	
-	if(this.constructor == ObjetoGrafico){
-		throw new Error("ObjetoGrafico es abstracta");
-	}
-	
+var Geometria = Base.extend({
+
+	initialize: function()
+	{
 	this.draw_mode = gl.TRIANGLE_STRIP;
+	this.dependencies = [];
 	
 	// buffers
 	this.position_buffer = [];
@@ -29,37 +28,38 @@ var ObjetoGrafico = function() {
 	
 	this.webgl_tangent_buffer = null;
 	this.webgl_binormal_buffer = null;
-}
 
-ObjetoGrafico.prototype = {
-	constructor: ObjetoGrafico,
-	
-	clone: function(geom){
-		if(this.constructor == Geometry){
-			throw new Error("Geometry es abstracta, no se puede clonar");
-		}
-		var clon = new this.constructor();
+	this.createGrid();//crea grilla del objeto - ES PROPIO DE CADA OBJETO QUE HEREDE DE ESTA CLASE
+	this.createIndexBuffer(); //crea el index buffer
+	this.setupWebGLBuffers();
+	},
+
+	/*clone: function()
+	{
+		var clon = new Geometria();
 		clon.position_buffer = this.position_buffer.slice(0);
 		clon.color_buffer = this.color_buffer.slice(0);
 		return clon;
 	},
-
-	init: function(){
-		this.createGrid();//crea grilla del objeto - ES PROPIO DE CADA OBJETO QUE HEREDE DE ESTA CLASE
-		this.createIndexBuffer(); //crea el index buffer
-		this.setupWebGLBuffers(); //hace el 
-	},
-	
-	moveVertex: function(i, x, y, z){
+	*/
+	moveVertex: function(i, x, y, z)
+	{
 		this.position_buffer.splice(i, 3, x, y, z);
 	},
 
 
-	applyMatrix: function(matrix) {
+	applyMatrix: function(matrix) 
+	{
 		mat4.multiply(this.model_matrix, matrix, this.model_matrix);
 	},
+
+	addDependencie: function(geom) 
+	{
+		this.dependencies.push(geom);
+	},
 	
-	getCenter: function(m) {
+	getCenter: function(m) 
+	{
 		var cantidadVertices = this.position_buffer.length/3.0;
 		var x_centro = 0, y_centro = 0, z_centro = 0;
 		for ( var i = 0, l = this.position_buffer.length; i < l; i+=3 ) {
@@ -79,7 +79,8 @@ ObjetoGrafico.prototype = {
 		return centro_mod;
 	},
 	
-	setTransform: function(matrix) {
+	setTransform: function(matrix) 
+	{
 		mat4.copy(this.model_matrix, matrix);
 	},
 	
@@ -89,7 +90,14 @@ ObjetoGrafico.prototype = {
 	// crea indices para la figura
 	createIndexBuffer: function(){
 
-	if(this.draw_mode == gl.TRIANGLES){
+	if(this.draw_mode == gl.LINE_STRIP)
+	{
+		for (var i = 0.0; i < this.cols; i++)
+		{
+			this.index_buffer.push(i);
+		}
+	}
+	else if(this.draw_mode == gl.TRIANGLES){
 		for (var i = 0.0; i < this.rows-1; i++) {
 			for (var j = 0.0; j < this.cols-1; j++) {
 				v0 = (i * this.cols) + j;
@@ -104,41 +112,51 @@ ObjetoGrafico.prototype = {
 				this.index_buffer.push(v3);
 			}
 		}
-	} else if(this.draw_mode == gl.TRIANGLE_STRIP){
+	} 
+	else if(this.draw_mode == gl.TRIANGLE_STRIP)
+		{
 			//Triangle strip
 			var i = 0.0, j = 0.0, j_add = 1.0, j_add_anterior = 0, i_add = 0;
-			while(true){
-				if((i != 0 && j == 0) || j == this.cols-1){
+			while(true)
+			{
+				if((i != 0 && j == 0) || j == this.cols-1)
+				{
 					j_add = -1 * j_add;
 					i++;
 				}
 				//Condicion de corte
-				if(i >= this.rows-1){
+				if(i >= this.rows-1)
+				{
 					break;
 				}
 				var v0, v1, v2, v3, v4;
 																
-				if(j_add > 0){
+				if(j_add > 0)
+				{
 					v0 = (i * this.cols) + j;
 					v1 = (i * this.cols) + j + 1;
 					v2 = ((i + 1) * this.cols) + j;
 					v3 = ((i + 1) * this.cols) + j + 1;
 					v4 = v3 + this.rows;
 		
-					if(j == 0){
+					if(j == 0)
+					{
 						this.index_buffer.push(v0);
 						this.index_buffer.push(v2);
 					}
 					this.index_buffer.push(v1);
 					this.index_buffer.push(v3);
-				} else if (j_add < 0){	
+				} 
+				else if (j_add < 0)
+				{	
 					v0 = (i * this.cols) + j - 1;
 					v1 = (i * this.cols) + j;
 					v2 = ((i + 1) * this.cols) + j - 1;
 					v3 = ((i + 1) * this.cols) + j;
 					v4 = v3 + this.rows;
 			
-					if(j == this.cols-1){
+					if(j == this.cols-1)
+					{
 						this.index_buffer.push(v1);
 						this.index_buffer.push(v3);
 					}
@@ -151,8 +169,10 @@ ObjetoGrafico.prototype = {
 		}
 	},
 	
-	setColor: function(color){
-		for(var i = 0; i < this.color_buffer.length; i+=3){
+	setColor: function(color)
+	{
+		for(var i = 0; i < this.color_buffer.length; i+=3)
+		{
 			this.color_buffer.splice(i, 3, color[0], color[1], color[2]);
 		}
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_color_buffer);
@@ -164,85 +184,109 @@ ObjetoGrafico.prototype = {
 		this.webgl_position_buffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_position_buffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.position_buffer), gl.STATIC_DRAW);
+		this.webgl_position_buffer.itemSize = 3;
+        this.webgl_position_buffer.numItems = this.position_buffer.length / 3;
 
 		// información del color
 		this.webgl_color_buffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_color_buffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.color_buffer), gl.STATIC_DRAW);   
+		this.webgl_color_buffer.itemSize = 3;
+        this.webgl_color_buffer.numItems = this.color_buffer.length / 3;
 
+		//Indices
 		this.webgl_index_buffer = gl.createBuffer();
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.webgl_index_buffer);
 		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.index_buffer), gl.STATIC_DRAW);
+		this.webgl_index_buffer.itemSize = 1;
+        this.webgl_index_buffer.numItems = this.index_buffer.length;
 		
 		// información de las normales
 		this.webgl_normals_buffer = gl.createBuffer();
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_normals_buffer);
 		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.normals_buffer), gl.STATIC_DRAW); 
-		
+		this.webgl_normals_buffer.itemSize = 3;
+        this.webgl_normals_buffer.numItems = this.normals_buffer.length / 3;
+
 		//información de las tangentes
-		if(this.tangent_buffer != null){
+		if(this.tangent_buffer != null)
+		{
 			this.webgl_tangent_buffer = gl.createBuffer();
 			gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_tangent_buffer);
 			gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.tangent_buffer), gl.STATIC_DRAW);
+			this.webgl_tangent_buffer.itemSize = 3;
+        	this.webgl_tangent_buffer.numItems = this.tangent_buffer.length / 3;
 		}
 		
 		// binormales
-		if(this.binormal_buffer != null){
+		if(this.binormal_buffer != null)
+		{
 			this.webgl_binormal_buffer = gl.createBuffer();
 			gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_binormal_buffer);
 			gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.binormal_buffer), gl.STATIC_DRAW);
+			this.webgl_binormal_buffer.itemSize = 3;
+        	this.webgl_binormal_buffer.numItems = this.binormal_buffer.length / 3;
 		}
 	},
 
 	//dibujar el VertexGrid. render
-	drawVertexGrid: function(m){
-
-		var vertexPositionAttribute = gl.getAttribLocation(glProgram, "aVertexPosition");
-		gl.enableVertexAttribArray(vertexPositionAttribute);
+	draw: function(m)
+	{
+		//var vertexPositionAttribute = gl.getAttribLocation(glProgram, "aVertexPosition");
+		//gl.enableVertexAttribArray(vertexPositionAttribute);
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_position_buffer);
-		gl.vertexAttribPointer(vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
+		gl.vertexAttribPointer(glProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
 		
 		var model_matrix_final = mat4.create();
 		mat4.multiply(model_matrix_final, m, this.model_matrix);
-		gl.uniformMatrix4fv(glProgram.uMMatrix, false, model_matrix_final); //le pasa al programa de vertices la matriz de modelado del objeto
+		gl.uniformMatrix4fv(glProgram.ModelMatrixUniform, false, model_matrix_final); //le pasa al programa de vertices la matriz de modelado del objeto
 		
-		var normals_matrix = mat4.create();
-		mat4.invert(normals_matrix, model_matrix_final);
-		mat4.transpose(normals_matrix, normals_matrix);
-		gl.uniformMatrix4fv(glProgram.uNMatrix, false, normals_matrix);
-
-		var vertexColorAttribute = gl.getAttribLocation(glProgram, "aVertexColor");
-		gl.enableVertexAttribArray(vertexColorAttribute);
+	/*	var normals_matrix = mat3.create();
+        mat3.fromMat4(normals_matrix, model_matrix_final);
+        mat3.invert(normals_matrix, normals_matrix);
+        mat3.transpose(normals_matrix, normals_matrix);
+		gl.uniformMatrix3fv(glProgram.nMatrixUniform, false, normals_matrix);
+*/
+		//var vertexColorAttribute = gl.getAttribLocation(glProgram, "aVertexColor");
+		//gl.enableVertexAttribArray(vertexColorAttribute);
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_color_buffer);
-		gl.vertexAttribPointer(vertexColorAttribute, 3, gl.FLOAT, false, 0, 0);
+		gl.vertexAttribPointer(glProgram.vertexColorAttribute, 3, gl.FLOAT, false, 0, 0);
 		
-		var vertexNormalAttribute = gl.getAttribLocation(glProgram, "aVertexNormal");
-		gl.enableVertexAttribArray(vertexNormalAttribute);
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_normals_buffer);
-		gl.vertexAttribPointer(vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
+		//var vertexNormalAttribute = gl.getAttribLocation(glProgram, "aVertexNormal");
+		//gl.enableVertexAttribArray(vertexNormalAttribute);
+		//gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_normals_buffer);
+		//gl.vertexAttribPointer(glProgram.vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
 		
-		if(this.webgl_tangent_buffer != null){
+		/*if(this.webgl_tangent_buffer != null)
+		{
 			var vertexTangentAttribute = gl.getAttribLocation(glProgram, "aVertexTangent");
 			gl.enableVertexAttribArray(vertexTangentAttribute);
 			gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_tangent_buffer);
-			gl.vertexAttribPointer(vertexTangentAttribute, 3, gl.FLOAT, false, 0, 0);
+			gl.vertexAttribPointer(glProgram.vertexTangentAttribute, 3, gl.FLOAT, false, 0, 0);
 		}
 		
-		if(this.webgl_binormal_buffer != null){
+		if(this.webgl_binormal_buffer != null)
+		{
 			var vertexBinormalAttribute = gl.getAttribLocation(glProgram, "aVertexBinormal");
 			gl.enableVertexAttribArray(vertexBinormalAttribute);
 			gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_binormal_buffer);
-			gl.vertexAttribPointer(vertexBinormalAttribute, 3, gl.FLOAT, false, 0, 0);
-		}
+			gl.vertexAttribPointer(glProgram.vertexBinormalAttribute, 3, gl.FLOAT, false, 0, 0);
+		}*/
 		
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.webgl_index_buffer);
 
 		// Dibuja
 		gl.drawElements(this.draw_mode, this.index_buffer.length, gl.UNSIGNED_SHORT, 0);
-		gl.disableVertexAttribArray(vertexPositionAttribute);
+		/*gl.disableVertexAttribArray(vertexPositionAttribute);
 		gl.disableVertexAttribArray(vertexColorAttribute);
 		gl.disableVertexAttribArray(vertexNormalAttribute);
 		gl.disableVertexAttribArray(vertexTangentAttribute);
 		gl.disableVertexAttribArray(vertexBinormalAttribute);
+*/
+		//Dibuja a sus dependencias
+		for(var i = 0; i < this.dependencies.length; i+=1)
+		{
+			this.dependencies.draw(model_matrix_final);
+		}
 	}
-}
+})
