@@ -112,6 +112,7 @@ var Curva = Geometria.extend({
 		this.cols = Math.floor(this.tramos / this.deltaU);
 		var u = 0;
 		var col;
+		this.tangent_buffer = []; //Esta en null por defecto
 		var vec_product = vec3.create();
 		var normal = vec3.create();
 					

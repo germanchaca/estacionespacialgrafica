@@ -9,12 +9,15 @@ var Geometria = Base.extend({
 	{
 	this.draw_mode = gl.TRIANGLE_STRIP;
 	this.dependencies = [];
+
+	this.texture = null;
 	
 	// buffers
 	this.position_buffer = [];
 	this.color_buffer = [];
 	this.index_buffer = [];
 	this.normals_buffer = [];
+	this.texture_coord_buffer = [];
 	
 	this.model_matrix = mat4.create();
 	
@@ -22,9 +25,10 @@ var Geometria = Base.extend({
 	this.webgl_color_buffer = null;
 	this.webgl_index_buffer = null;
 	this.webgl_normals_buffer = null;
+	this.webgl_texture_coord_buffer = null;
 	
-	this.tangent_buffer = null;
-	this.binormal_buffer = null;
+	this.tangent_buffer = [];
+	this.binormal_buffer = [];
 	
 	this.webgl_tangent_buffer = null;
 	this.webgl_binormal_buffer = null;
@@ -194,6 +198,13 @@ var Geometria = Base.extend({
 		this.webgl_color_buffer.itemSize = 3;
         this.webgl_color_buffer.numItems = this.color_buffer.length / 3;
 
+        //Texturas
+        this.webgl_texture_coord_buffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_texture_coord_buffer);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.texture_coord_buffer), gl.STATIC_DRAW);
+        this.webgl_texture_coord_buffer.itemSize = 2;
+        this.webgl_texture_coord_buffer.numItems = this.texture_coord_buffer.length / 2;
+
 		//Indices
 		this.webgl_index_buffer = gl.createBuffer();
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.webgl_index_buffer);
@@ -232,30 +243,35 @@ var Geometria = Base.extend({
 	//dibujar el VertexGrid. render
 	draw: function(m)
 	{
-		//var vertexPositionAttribute = gl.getAttribLocation(glProgram, "aVertexPosition");
-		//gl.enableVertexAttribArray(vertexPositionAttribute);
+		gl.uniform1f(glProgram.UseTexture, 0.0);
+
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_position_buffer);
 		gl.vertexAttribPointer(glProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
+	
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_color_buffer);
+		gl.vertexAttribPointer(glProgram.vertexColorAttribute, 3, gl.FLOAT, false, 0, 0);
+
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_texture_coord_buffer);
+        gl.vertexAttribPointer(glProgram.textureCoordAttribute, this.webgl_texture_coord_buffer.itemSize, gl.FLOAT, false, 0, 0);
+
+   		gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_normals_buffer);
+		gl.vertexAttribPointer(glProgram.vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
+
+		gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.texture);
+        gl.uniform1i(glProgram.samplerUniform, 0);
 		
-		var model_matrix_final = mat4.create();
+        var model_matrix_final = mat4.create();
 		mat4.multiply(model_matrix_final, m, this.model_matrix);
 		gl.uniformMatrix4fv(glProgram.ModelMatrixUniform, false, model_matrix_final); //le pasa al programa de vertices la matriz de modelado del objeto
-		
-	/*	var normals_matrix = mat3.create();
+
+        var normals_matrix = mat3.create();
         mat3.fromMat4(normals_matrix, model_matrix_final);
         mat3.invert(normals_matrix, normals_matrix);
         mat3.transpose(normals_matrix, normals_matrix);
 		gl.uniformMatrix3fv(glProgram.nMatrixUniform, false, normals_matrix);
-*/
-		//var vertexColorAttribute = gl.getAttribLocation(glProgram, "aVertexColor");
-		//gl.enableVertexAttribArray(vertexColorAttribute);
-		gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_color_buffer);
-		gl.vertexAttribPointer(glProgram.vertexColorAttribute, 3, gl.FLOAT, false, 0, 0);
-		
-		//var vertexNormalAttribute = gl.getAttribLocation(glProgram, "aVertexNormal");
-		//gl.enableVertexAttribArray(vertexNormalAttribute);
-		//gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_normals_buffer);
-		//gl.vertexAttribPointer(glProgram.vertexNormalAttribute, 3, gl.FLOAT, false, 0, 0);
+
+		gl.bindTexture(gl.TEXTURE_2D, this.texture);
 		
 		/*if(this.webgl_tangent_buffer != null)
 		{
