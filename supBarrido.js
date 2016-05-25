@@ -9,7 +9,7 @@ var SupBarrido = Geometria.extend({
 	{
 		//Se supone como la base del poligono la canónica
 		this.poligono = poligono.slice(0); //Lista de listas (cada lista interior es un punto xyz)
-		this.puntosRecorrido = puntosRecorrido.slice(0); //el primer punto y el último deben ser iguales?	
+		this.puntosRecorrido = puntosRecorrido.slice(0); //el primer punto y el último deben ser iguales? Solo si la superficie es cerrada
 		//NORMALIZAR BASES
 		this.basesRecorrido = basesRecorrido.slice(0); //basesRecorrido = [[b1,b2,b3],[b4,b5,b6],....] cada b es un vector
 		Geometria.prototype.initialize.call(this);

@@ -76,11 +76,11 @@ var Curva = Geometria.extend({
 		var p2=this.puntosDeControl[i+2];
 		var p3=this.puntosDeControl[i+3];
 
-		var punto=new Object();
+		var punto=[];
 
-		punto.x=this.base0(uLocal) * p0[0] + this.base1(uLocal) * p1[0] + this.base2(uLocal) * p2[0] + this.base3(uLocal) * p3[0];
-		punto.y=this.base0(uLocal) * p0[1] + this.base1(uLocal) * p1[1] + this.base2(uLocal) * p2[1] + this.base3(uLocal) * p3[1];
-		punto.z=this.base0(uLocal) * p0[2] + this.base1(uLocal) * p1[2] + this.base2(uLocal) * p2[2] + this.base3(uLocal) * p3[2];
+		punto.push(this.base0(uLocal) * p0[0] + this.base1(uLocal) * p1[0] + this.base2(uLocal) * p2[0] + this.base3(uLocal) * p3[0]);
+		punto.push(this.base0(uLocal) * p0[1] + this.base1(uLocal) * p1[1] + this.base2(uLocal) * p2[1] + this.base3(uLocal) * p3[1]);
+		punto.push(this.base0(uLocal) * p0[2] + this.base1(uLocal) * p1[2] + this.base2(uLocal) * p2[2] + this.base3(uLocal) * p3[2]);
 
 		return punto;
 	},
@@ -96,11 +96,11 @@ var Curva = Geometria.extend({
 		var p2=this.puntosDeControl[i+2];
 		var p3=this.puntosDeControl[i+3];
 
-		var punto=new Object();
+		var punto=[];
 
-		punto.x=this.base0der(uLocal)*p0[0]+this.base1der(uLocal)*p1[0]+this.base2der(uLocal)*p2[0]+this.base3der(uLocal)*p3[0];
-		punto.y=this.base0der(uLocal)*p0[1]+this.base1der(uLocal)*p1[1]+this.base2der(uLocal)*p2[1]+this.base3der(uLocal)*p3[1];
-		punto.z=this.base0der(uLocal)*p0[2]+this.base1der(uLocal)*p1[2]+this.base2der(uLocal)*p2[2]+this.base3der(uLocal)*p3[2];
+		punto.push(this.base0der(uLocal)*p0[0]+this.base1der(uLocal)*p1[0]+this.base2der(uLocal)*p2[0]+this.base3der(uLocal)*p3[0]);
+		punto.push(this.base0der(uLocal)*p0[1]+this.base1der(uLocal)*p1[1]+this.base2der(uLocal)*p2[1]+this.base3der(uLocal)*p3[1]);
+		punto.push(this.base0der(uLocal)*p0[2]+this.base1der(uLocal)*p1[2]+this.base2der(uLocal)*p2[2]+this.base3der(uLocal)*p3[2]);
 
 		return punto;
 	},
@@ -118,20 +118,20 @@ var Curva = Geometria.extend({
 		for (col = 0; col < this.cols; col++)
 		{
 			var punto=this.CurvaCubica(u);
-			this.position_buffer.push(punto.x);
-			this.position_buffer.push(punto.y);
-			this.position_buffer.push(punto.z);
+			this.position_buffer.push(punto[0]);
+			this.position_buffer.push(punto[1]);
+			this.position_buffer.push(punto[2]);
 
 			this.color_buffer.push(1.0);
 			this.color_buffer.push(1.0); //Color default
 			this.color_buffer.push(1.0);
 
 			var puntoDer = this.CurvaCubicaDerivadaPrimera(u);
-			this.tangent_buffer.push(puntoDer.x);
-			this.tangent_buffer.push(puntoDer.y);
-			this.tangent_buffer.push(puntoDer.z);
+			this.tangent_buffer.push(puntoDer[0]);
+			this.tangent_buffer.push(puntoDer[1]);
+			this.tangent_buffer.push(puntoDer[2]);
 			
-			var tangente = vec3.fromValues(puntoDer.x, puntoDer.y, puntoDer.z);
+			var tangente = vec3.fromValues(puntoDer[0], puntoDer[1], puntoDer[2]);
 			var ejez = vec3.fromValues(0,0,1);
 			vec3.cross(vec_product,ejez,tangente);
 			vec3.cross(normal,vec_product,tangente);
