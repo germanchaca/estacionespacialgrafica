@@ -17,6 +17,10 @@
 <script type="text/javascript" src="supBarrido.js"></script>
 <script type="text/javascript" src="perfil.js"></script>
 <script type="text/javascript" src="poligono.js"></script>
+<script type="text/javascript" src="cilindro.js"></script>
+<script type="text/javascript" src="paleta.js"></script>
+<script type="text/javascript" src="estructuraCentral.js"></script>
+
 
 
 <script id="shader-fs" type="x-shader/x-fragment">
@@ -595,11 +599,12 @@
        	var model_matrix_curva = mat4.create();
         mat4.identity(model_matrix_curva);
         mat4.scale(model_matrix_curva, model_matrix_curva, [7.0, 7.0, 7.0]);
-        curva.draw(model_matrix_curva);
+        //curva.draw(model_matrix_curva);
 
         var model_matrix_sup = mat4.create();
         mat4.identity(model_matrix_sup);
-        mat4.scale(model_matrix_sup, model_matrix_sup, [3.0, 3.0, 3.0]);
+        mat4.translate(model_matrix_sup,model_matrix_sup, [0,-50,0]);
+        //mat4.scale(model_matrix_sup, model_matrix_sup, [0.5, 0.5, 0.5]);
         //mat4.rotate(model_matrix_sup,model_matrix_sup, 1.5*Math.PI,[1,1,-1])
         sup.draw(model_matrix_sup);
     }
@@ -643,13 +648,19 @@
         //perfil.generarConCurva(curva,0.02);
         //sup = new SupRevolucion(perfil,[0,1,0],2*Math.PI,0.05);
        
-        curva = new CurvaBezier([[0,-1,0],[1,-1,0],[1,1,0],[0,1,0],[-1,1,0],[-1,-1,0],[0,-1,0]]);
-        poligono = new Poligono();
-        poligono.generarConCurva(curva,0.01);
+        //curva = new CurvaBezier([[0,-1,0],[1,-1,0],[1,1,0],[0,1,0],[-1,1,0],[-1,-1,0],[0,-1,0]]);
+        //poligono = new Poligono();
+        //poligono.generarConCurva(curva,0.01);
 
 		//sup = new SupBarrido(poligono,[[0,0,0],[0,0,1],[0,0,2],[0,0,3],[0,0,4]], [ [[1,0,0],[0,1,0],[0,0,1]], [[1,0,0],[0,1,1],[0,-1,1]], [[1,0,0],[0,1,2],[0,-2,1]], [[1,0,0],[0,1,3],[0,-3,1]],[[1,0,0],[0,1,0],[0,0,1]] ]);
 
-		sup = new SupBarrido(poligono,[[0,0,0],[0,0,1],[0,0,2],[0,0,3],[0,0,4]], [ [[1,0,0],[0,1,0],[0,0,1]], [[1,0,0],[0,1,0],[0,0,1]], [[1,0,0],[0,1,0],[0,0,1]], [[1,0,0],[0,1,0],[0,0,1]],[[1,0,0],[0,1,0],[0,0,1]] ]);
+		//sup = new SupBarrido(poligono,[[0,0,0],[0,0,1],[0,1,2],[0,3,3],[0,3,4]], [ [[1,0,0],[0,1,0],[0,0,1]], [[1,0,0],[0,0.71,0.71],[0,0.71,-0.71]], [[1,0,0],[0,1,0],[0,0,1]], [[1,0,0],[0,1,0],[0,0,1]],[[1,0,0],[0,1,0],[0,0,1]] ]);
+
+		//sup = new Cilindro(0.02);
+
+		//sup = new Paleta(2,2,10,10);
+
+        sup = new EstructuraCentral(0.1,0.01);
 
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.enable(gl.DEPTH_TEST);
