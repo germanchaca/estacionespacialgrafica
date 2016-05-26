@@ -20,6 +20,8 @@
 <script type="text/javascript" src="cilindro.js"></script>
 <script type="text/javascript" src="paleta.js"></script>
 <script type="text/javascript" src="estructuraCentral.js"></script>
+<script type="text/javascript" src="arcoInterno.js"></script>
+
 
 
 
@@ -601,10 +603,13 @@
         mat4.scale(model_matrix_curva, model_matrix_curva, [7.0, 7.0, 7.0]);
         //curva.draw(model_matrix_curva);
 
+        //gl.uniform3f(glProgram.ambientColorUniform, 0.3, 0.3, 0.3 );
+        //gl.uniform3f(glProgram.directionalColorUniform, 0.0, 0.0, 0.1);
+
         var model_matrix_sup = mat4.create();
         mat4.identity(model_matrix_sup);
-        mat4.translate(model_matrix_sup,model_matrix_sup, [0,-50,0]);
-        //mat4.scale(model_matrix_sup, model_matrix_sup, [0.5, 0.5, 0.5]);
+        //mat4.scale(model_matrix_sup, model_matrix_sup, [0.2, 0.2, 0.2]);
+        //mat4.translate(model_matrix_sup,model_matrix_sup, [0,-20,0]);
         //mat4.rotate(model_matrix_sup,model_matrix_sup, 1.5*Math.PI,[1,1,-1])
         sup.draw(model_matrix_sup);
     }
@@ -660,7 +665,9 @@
 
 		//sup = new Paleta(2,2,10,10);
 
-        sup = new EstructuraCentral(0.1,0.01);
+        //sup = new EstructuraCentral(0.05,0.02);
+
+        sup= new ArcoInterno();
 
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.enable(gl.DEPTH_TEST);

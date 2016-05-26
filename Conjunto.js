@@ -4,18 +4,16 @@ Esta clase sirve para armar conjuntos de objetos
 No representa nada que se dibuje, pero dibuja y aplica transformaciones a todos sus objetos
 ****************************************/
 
-var Conjunto = function() {
-	this.matrix_local = mat4.create();
-	//this.matrix_normals_local = mat4.create();
-	this.objects = [];
-	//this.type = 'Conjunto';
-}
-
-Conjunto.prototype = {
-
-	constructor: Conjunto,
-	
-	clone: function(){		
+var Conjunto = Base.extend({
+	initialize: function()
+	{
+		this.matrix_local = mat4.create();
+		//this.matrix_normals_local = mat4.create();
+		this.objects = [];
+		//this.type = 'Conjunto';
+	},
+	clone: function()
+	{		
 		var clon = new this.constructor();
 		clon.matrix_local = mat4.clone(this.matrix_local);
 		for(var i = 0; i < this.objects.length; i++){
@@ -52,16 +50,16 @@ Conjunto.prototype = {
 		}
 	},
 	
-	render: function(m){
+	draw: function(m){
 		var m_final = mat4.create();
 		if(m !== undefined){
 			mat4.multiply(m_final, m, this.matrix_local);
 		}
 		for ( var i = 0, l = this.objects.length; i < l; i ++ ) {
 			if(m !== undefined)
-				this.objects[i].render(m_final);
+				this.objects[i].draw(m_final);
 			else
-				this.objects[i].render(this.matrix_local);
+				this.objects[i].draw(this.matrix_local);
 		}
 	},
 	
@@ -82,5 +80,5 @@ Conjunto.prototype = {
 		for ( var i = 0, l = this.objects.length; i < l; i ++ ) {
 			this.objects[i].setColor(color);
 		}
-	},
-}
+	}
+})

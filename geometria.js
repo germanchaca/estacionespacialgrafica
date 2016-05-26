@@ -302,7 +302,7 @@ var Geometria = Base.extend({
 		//Dibuja a sus dependencias
 		for(var i = 0; i < this.dependencies.length; i+=1)
 		{
-			this.dependencies.draw(model_matrix_final);
+			this.dependencies[i].draw(model_matrix_final);
 		}
 	}
 })
