@@ -109,7 +109,7 @@ var Curva = Geometria.extend({
 
 		this.draw_mode=gl.LINE_STRIP; //Estas tres definiciones tienen que estar aca
 		this.rows = 1
-		this.cols = Math.floor(this.tramos / this.deltaU);
+		this.cols = Math.ceil(this.tramos / this.deltaU);
 		var u = 0;
 		var col;
 		var vec_product = vec3.create();

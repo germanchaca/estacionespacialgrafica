@@ -29,13 +29,13 @@ var SupRevolucion = Geometria.extend({
 		this.tangent_buffer = []; //Esta en null por defecto
 
 		this.cols = this.perfil.puntos.length;
-		this.rows = Math.ceil( 1 / this.paso);
+		this.rows = Math.ceil( 1 / this.paso)+1;
 		var ang;
 		var perfilRotado;
 		var puntos, tangentes, normales;
 		var punto, tangente, normal;
 					
-		for (row = 0; row < this.rows; row++)
+		for (row = 0; row <= this.rows; row++)
 		{
 			ang = row*this.paso*this.angulo;
 			perfilRotado = this.perfil.obtenerPerfilRotado(this.eje, ang); 
