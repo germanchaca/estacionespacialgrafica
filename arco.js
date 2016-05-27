@@ -44,14 +44,25 @@ var Arco = SupBarrido.extend({
 		var arcoInterno = new ArcoInterno(puntosRecorrido,basesRecorrido);
 		this.addDependencie(arcoInterno);
 
-		/*var tapa = new Tapa();
+		//TAPAS
+
+		var tapa = new TapaArco(arcoInterno.curva, curva, 0.01);
 		
 		transformacion = mat4.create();
-		mat4.translate(transformacion,transformacion,[6,0,0]);
+		mat4.translate(transformacion,transformacion,[5,0,0]);
 		tapa.applyMatrix(transformacion);
-		tapa.setColor([0.1,0.1,0.1]);
 		this.addDependencie(tapa);
-*/
+
+		var tapa2 = new TapaArco(arcoInterno.curva, curva, 0.01);
+		
+		transformacion = mat4.create();
+		mat4.rotate(transformacion,transformacion,0.5*Math.PI,[0,1,0]);
+		mat4.translate(transformacion,transformacion,[5,0,0]);
+		//mat4.rotate(transformacion,transformacion, Math.PI, [1,0,0]);
+		tapa2.applyMatrix(transformacion);
+		this.addDependencie(tapa2);
+
+
 		//CILINDROS EXTERNOS
 		for (var i = 0; i < 3; i++)
 		{
