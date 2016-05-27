@@ -35,6 +35,9 @@
 <script type="text/javascript" src="tapaNaveDelantera.js"></script>
 <script type="text/javascript" src="nave.js"></script>
 <script type="text/javascript" src="brazo.js"></script>
+<script type="text/javascript" src="turbina.js"></script>
+<script type="text/javascript" src="Cable.js"></script>
+
 
 
 
@@ -476,7 +479,7 @@
         //mat4.identity(CameraMatrix);
         //mat4.translate(CameraMatrix, CameraMatrix, [0, 0, -60]);
         var eye_point = vec3.create();
-        vec3.set(eye_point, 30, 65, 90);
+        vec3.set(eye_point, 0, 0, 70);
         var at_point = vec3.create();
         vec3.set(at_point, 0, 0, 0);
         var up_point = vec3.create();
@@ -616,14 +619,14 @@
         var model_matrix_curva = mat4.create();
         mat4.identity(model_matrix_curva);
         mat4.scale(model_matrix_curva, model_matrix_curva, [7.0, 7.0, 7.0]);
-        //curva.draw(model_matrix_curva);
+       // curva.draw(model_matrix_curva);
 
         //gl.uniform3f(glProgram.ambientColorUniform, 0.3, 0.3, 0.3 );
         //gl.uniform3f(glProgram.directionalColorUniform, 0.0, 0.0, 0.1);
 
         var model_matrix_sup = mat4.create();
         mat4.identity(model_matrix_sup);
-        //mat4.scale(model_matrix_sup, model_matrix_sup, [2.0, 2.0, 2.0]);
+        mat4.scale(model_matrix_sup, model_matrix_sup, [6.0, 6.0, 6.0]);
         //mat4.translate(model_matrix_sup,model_matrix_sup, [0,-20,0]);
         //mat4.rotate(model_matrix_sup,model_matrix_sup, 0.75*Math.PI,[0,1,0])
         sup.draw(model_matrix_sup);
@@ -685,8 +688,18 @@
 
         //sup= new Arco(5,Math.PI,0.05);
 
-        sup = new Nave();
+        //sup = new Nave(0.25*Math.PI);
+
+        //curva = new CurvaBSpline([[1,1,0],[1,1,0],[1,1,0],[1.5,0.6,0.3],[1.4,0.9,0.4],[0.8,0.3,1],[0.1,0.5,1.5],[0,0,2],[1.3,0.6,1],[1.4,-1.2,1.4],[1.6,0.4,0.5],[1.5,0.5,0.4],[1.5,0.5,0.4],[1.5,0.5,0.4]]);
+
+        //curva = new CurvaBezier([[-1,0,0],[-1,1,0],[1,1,0],[1,0,0],[1,-1,0],[-1,-1,0],[-1,0.05,0]]);
+
+        //sup = new Turbina(0.02);
     
+        //sup = new Brazo();
+
+        sup = new Cable(0.02);
+
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.enable(gl.DEPTH_TEST);
 

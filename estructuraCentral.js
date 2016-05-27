@@ -59,6 +59,17 @@ var EstructuraCentral = SupRevolucion.extend({
 
 		//ANTENAS
 		var antena = new Antena();
+		var transformacion = mat4.create();
+		mat4.rotate(transformacion,transformacion,-0.25*Math.PI,[0,1,0]);
+		antena.applyMatrix(transformacion);
+		this.addDependencie(antena);
+
+		var antena = new Antena();
+		//Uso la transformacion de la antena anterior
+		mat4.translate(transformacion,transformacion,[0,5,0]);
+		mat4.rotate(transformacion,transformacion,Math.PI,[0,1,0]);
+		mat4.rotate(transformacion,transformacion,Math.PI,[1,0,0]);
+		antena.applyMatrix(transformacion);
 		this.addDependencie(antena);
 	},
 })
