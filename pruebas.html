@@ -476,7 +476,7 @@
         //mat4.identity(CameraMatrix);
         //mat4.translate(CameraMatrix, CameraMatrix, [0, 0, -60]);
         var eye_point = vec3.create();
-        vec3.set(eye_point, 30, 65, -90);
+        vec3.set(eye_point, 30, 65, 90);
         var at_point = vec3.create();
         vec3.set(at_point, 0, 0, 0);
         var up_point = vec3.create();
@@ -685,9 +685,8 @@
 
         //sup= new Arco(5,Math.PI,0.05);
 
-        //sup = new Nave();
-        sup = new Brazo();
-        
+        sup = new Nave();
+    
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.enable(gl.DEPTH_TEST);
 
