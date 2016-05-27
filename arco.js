@@ -1,10 +1,12 @@
 var Arco = SupBarrido.extend({
 	initialize: function(radio,anguloTotal,paso)
 	{
+		
 
 		curva = new CurvaBezier([ [-0.75,0.20,0], [-0.63,0.75,0], [0.63,0.75,0], [0.75,0.20,0], [0.71,0.20,0], [0.67,0.20,0], [0.63,0.20,0], [0.69,0.1,0], [0.69,-0.1,0], [0.63,-0.2,0], 
 			[0.67,-0.2,0], [0.71,-0.2,0], [0.75,-0.2,0], [0.63,-0.75,0], [-0.63,-0.75,0], [-0.75,-0.20,0], [-0.71,-0.2,0], [-0.67,-0.2,0], [-0.63,-0.20,0], [-0.69,-0.1,0], [-0.69,0.1,0], [-0.63,0.2,0], 
 			[-0.67,0.2,0], [-0.71,0.2,0], [-0.75,0.2,0] ]);
+
 
 		poligono = new Poligono();
 		poligono.generarConCurva(curva,0.05);
@@ -41,6 +43,14 @@ var Arco = SupBarrido.extend({
 		
 		var arcoInterno = new ArcoInterno(puntosRecorrido,basesRecorrido);
 		this.addDependencie(arcoInterno);
+
+		var tapa = new Tapa();
+		
+		transformacion = mat4.create();
+		mat4.translate(transformacion,transformacion,[6,0,0]);
+		tapa.applyMatrix(transformacion);
+		tapa.setColor([0.1,0.1,0.1]);
+		this.addDependencie(tapa);
 
 		//CILINDROS EXTERNOS
 		for (var i = 0; i < 3; i++)
