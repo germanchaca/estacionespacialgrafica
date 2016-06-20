@@ -610,6 +610,7 @@
 
        
         // Matriz de modelado del mars
+<<<<<<< HEAD:tp1/main.html
         var translate_deimos = mat4.create();
         var translate_deimos2 = mat4.create();
         var model_matrix_deimos = mat4.create();
@@ -631,6 +632,13 @@
 
         mars.draw(model_matrix_deimos);
        */ //
+=======
+        var model_matrix_mars = mat4.create();
+        mat4.identity(model_matrix_mars);
+        mat4.scale(model_matrix_mars, model_matrix_mars, [7.0, 7.0, 7.0]);
+        mars.draw(model_matrix_mars);
+        //
+>>>>>>> de493cc57c7f04e28e05183b789acc61151499a1:main.html
         //////////////////////////////////////////////////////// 
 
         //gl.uniform3f(glProgram.ambientColorUniform, 0.3, 0.3, 0.3 );
