@@ -1,10 +1,12 @@
 var Arco = SupBarrido.extend({
 	initialize: function(radio,anguloTotal,paso)
 	{
+		
 
 		curva = new CurvaBezier([ [-0.75,0.20,0], [-0.63,0.75,0], [0.63,0.75,0], [0.75,0.20,0], [0.71,0.20,0], [0.67,0.20,0], [0.63,0.20,0], [0.69,0.1,0], [0.69,-0.1,0], [0.63,-0.2,0], 
 			[0.67,-0.2,0], [0.71,-0.2,0], [0.75,-0.2,0], [0.63,-0.75,0], [-0.63,-0.75,0], [-0.75,-0.20,0], [-0.71,-0.2,0], [-0.67,-0.2,0], [-0.63,-0.20,0], [-0.69,-0.1,0], [-0.69,0.1,0], [-0.63,0.2,0], 
 			[-0.67,0.2,0], [-0.71,0.2,0], [-0.75,0.2,0] ]);
+
 
 		poligono = new Poligono();
 		poligono.generarConCurva(curva,0.05);
@@ -42,6 +44,25 @@ var Arco = SupBarrido.extend({
 		var arcoInterno = new ArcoInterno(puntosRecorrido,basesRecorrido);
 		this.addDependencie(arcoInterno);
 
+		//TAPAS
+
+		var tapa = new TapaArco(arcoInterno.curva, curva, 0.01);
+		
+		transformacion = mat4.create();
+		mat4.translate(transformacion,transformacion,[5,0,0]);
+		tapa.applyMatrix(transformacion);
+		this.addDependencie(tapa);
+
+		var tapa2 = new TapaArco(arcoInterno.curva, curva, 0.01);
+		
+		transformacion = mat4.create();
+		mat4.rotate(transformacion,transformacion,0.5*Math.PI,[0,1,0]);
+		mat4.translate(transformacion,transformacion,[5,0,0]);
+		//mat4.rotate(transformacion,transformacion, Math.PI, [1,0,0]);
+		tapa2.applyMatrix(transformacion);
+		this.addDependencie(tapa2);
+
+
 		//CILINDROS EXTERNOS
 		for (var i = 0; i < 3; i++)
 		{
@@ -54,6 +75,21 @@ var Arco = SupBarrido.extend({
 			mat4.scale(transformacion,transformacion,[0.5,1,0.5]);
 			cilindro.applyMatrix(transformacion);
 			cilindro.setColor([0.1,0.1,0.1]);
+			if (i==1)
+			{
+				var cable = new Cable(0.02);
+				var transformacion = mat4.create();
+				//mat4.translate(transformacion,transformacion,[-3,0,-3]);
+				//mat4.rotate(transformacion,transformacion,Math.PI,[0,0,1]);
+				//
+				mat4.translate(transformacion,transformacion,[0.5,0.5,0.5]);
+				mat4.scale(transformacion, transformacion, [3,3,3]);
+				mat4.translate(transformacion,transformacion,[0,-1,1]);
+
+				cable.applyMatrix(transformacion);
+				cable.setColor([1.0,0.1,0.2]);
+				this.addDependencie(cable);
+			}
 			this.addDependencie(cilindro);
 		}
 

@@ -23,12 +23,14 @@ var Antena = Conjunto.extend({
 
 
 		var transformacionReceptor = mat4.create();
-
-		var dobleReceptor = new DobleReceptor(Math.PI);
-		mat4.translate(transformacionReceptor,transformacionReceptor,[0,6,0]);
-		dobleReceptor.applyMatrix(transformacionReceptor);
-		this.add(dobleReceptor);
-
-
+		mat4.translate(transformacionReceptor,transformacionReceptor,[0,5,0]);
+		
+		for (var i = 0; i < 4; i++)
+		{
+			var dobleReceptor = new DobleReceptor(0);
+			mat4.translate(transformacionReceptor,transformacionReceptor,[0,1,0]);
+			dobleReceptor.applyMatrix(transformacionReceptor);
+			this.add(dobleReceptor);			
+		}
 	}
 })
