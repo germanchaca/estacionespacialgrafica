@@ -70,9 +70,9 @@ var Arco = SupBarrido.extend({
 			transformacion = mat4.create();
 			mat4.rotate(transformacion,transformacion,-0.5*i*Math.PI,[0,1,0]);
 			mat4.rotate(transformacion,transformacion,-0.25*Math.PI,[0,1,0]);
-			mat4.translate(transformacion,transformacion,[5,0,0]);
+			mat4.translate(transformacion,transformacion,[5.6,0,0]);
 			mat4.rotate(transformacion,transformacion,-0.5*Math.PI,[0,0,1]);
-			mat4.scale(transformacion,transformacion,[0.5,1,0.5]);
+			mat4.scale(transformacion,transformacion,[0.5,0.45,0.5]);
 			cilindro.applyMatrix(transformacion);
 			cilindro.setColor([0.1,0.1,0.1]);
 			if (i==1)
@@ -82,7 +82,7 @@ var Arco = SupBarrido.extend({
 				//mat4.translate(transformacion,transformacion,[-3,0,-3]);
 				//mat4.rotate(transformacion,transformacion,Math.PI,[0,0,1]);
 				//
-				mat4.translate(transformacion,transformacion,[0.5,0.5,0.5]);
+				mat4.translate(transformacion,transformacion,[1.0,0.2,1.0]);
 				mat4.scale(transformacion, transformacion, [3,3,3]);
 				mat4.translate(transformacion,transformacion,[0,-1,1]);
 

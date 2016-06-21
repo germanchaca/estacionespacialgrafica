@@ -67,11 +67,12 @@ var Perfil = Base.extend({
 		var normales = [];
 		var tangentes = [];
 		var punto,tangente;
-		var normal = vec3.create();
-		var ejez = vec3.fromValues(0,0,1);
+		var normal;
+		var ejez = vec3.fromValues(0,0,-1);
 
 		for (var u = curva.minU ; u <= curva.maxU; u += paso)
 		{
+			normal = vec3.create();
 			punto = curva.CurvaCubica(u);
 			tangente = curva.CurvaCubicaDerivadaPrimera(u);
 			vec3.cross(normal,tangente,ejez);

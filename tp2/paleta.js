@@ -43,7 +43,7 @@ var Paleta = Geometria.extend({
 		var puntoY;
 		
 		var tangente = [0,1,0];
-		var normal = [0,0,1];
+		var normal = [0,0,-1];
 		
 					
 		for (var row = 0; row < this.rows; row++)

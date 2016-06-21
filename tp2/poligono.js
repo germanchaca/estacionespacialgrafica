@@ -109,7 +109,7 @@ var Poligono = Base.extend({
 		var normales = [];
 		var tangentes = [];
 		var punto,tangente;
-		var ejez = vec3.fromValues(0,0,1);
+		var ejez = vec3.fromValues(0,0,-1);
 		var x = 0; 
 		var y = 0;
 		var z = 0;
