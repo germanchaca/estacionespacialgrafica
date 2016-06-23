@@ -11,6 +11,7 @@ var Geometria = Base.extend({
 	this.dependencies = [];
 
 	this.texture = null;
+	this.useTexture = 0.0;
 	
 	// buffers
 	this.position_buffer = [];
@@ -32,6 +33,23 @@ var Geometria = Base.extend({
 	
 	this.webgl_tangent_buffer = null;
 	this.webgl_binormal_buffer = null;
+
+	this.ka = 0.1;
+	this.kd = 0.1;
+	this.ks = 0.1;
+	this.shininess = 0.0;
+	this.color_diffuse = 0.0;
+	this.color_specular = 0.0;
+	this.reflectiveness = 0.0;
+
+	this.useNormalMap = false;
+	this.normalMap = null;
+	this.useReflexMap = false;
+	this.reflexMap = null;
+	this.useDiffuseMap = false;
+	this.diffuseMap = null;
+	this.useIlumMap = false;
+	this.ilumMap = null;
 
 	this.createGrid();//crea grilla del objeto - ES PROPIO DE CADA OBJETO QUE HEREDE DE ESTA CLASE
 	this.createIndexBuffer(); //crea el index buffer
@@ -173,31 +191,62 @@ var Geometria = Base.extend({
 		}
 	},
 
+	initNormalMap: function(map_file)
+	{
+		this.useNormalMap = true;
+		this.normalMap = this.loadMap(map_file);
+	},
+
+	initDiffuseMap: function(map_file)
+	{
+		this.useDiffuseMap = true;
+		this.diffuseMap = this.loadMap(map_file);
+	},
+	
+	initIlumMap: function(map_file)
+	{
+		this.useIlumMap = true;
+		this.ilumMap = this.loadMap(map_file);
+	},
+
+	initReflexMap: function(map_file)
+	{
+		this.useReflexMap = true;
+		this.reflexMap = this.loadMap(map_file);
+	},
+
 	initTexture: function(texture_file)
 	{
+		this.texture = this.loadMap(texture_file);
+	},
+
+	loadMap: function(map_file)
+	{
         var aux_texture = gl.createTexture();
-        this.texture = aux_texture;
-        this.texture.image = new Image();
+        var texture = aux_texture;
+        texture.image = new Image();
 
         var that = this;
 
-        this.texture.image.onload = function () 
+        texture.image.onload = function () 
         {
-        	that.handleLoadedTexture()
+        	that.handleLoadedTexture(texture)
         }
-        this.texture.image.src = texture_file;
+        texture.image.src = map_file;
+    	return texture;
     },
 
-    handleLoadedTexture: function() 
+    handleLoadedTexture: function(texture) 
     {
         gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-        gl.bindTexture(gl.TEXTURE_2D, this.texture);
-        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, this.texture.image);
+        gl.bindTexture(gl.TEXTURE_2D, texture);
+        gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, texture.image);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_NEAREST);
         gl.generateMipmap(gl.TEXTURE_2D);
 
         gl.bindTexture(gl.TEXTURE_2D, null);
+        //Agregar return texture?
     },
 	
 	setColor: function(color)
@@ -270,7 +319,7 @@ var Geometria = Base.extend({
 	//dibujar el VertexGrid. render
 	draw: function(m)
 	{
-		gl.uniform1f(glProgram.UseTexture, this.UseTexture);
+		gl.uniform1f(glProgram.UseTexture, this.useTexture);
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_position_buffer);
 		gl.vertexAttribPointer(glProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
