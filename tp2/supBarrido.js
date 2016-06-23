@@ -67,6 +67,12 @@ var SupBarrido = Geometria.extend({
 				this.normals_buffer.push(normal[1]);
 				this.normals_buffer.push(normal[2]);
 
+				binormal = vec3.create();
+				vec3.cross(binormal,tangente,normal);
+				this.binormal_buffer.push(binormal[0]);
+				this.binormal_buffer.push(binormal[1]);
+				this.binormal_buffer.push(binormal[2]);
+
 				this.texture_coord_buffer.push(1.0-col/this.cols);
 				this.texture_coord_buffer.push(1.0-row/this.rows);
 			}

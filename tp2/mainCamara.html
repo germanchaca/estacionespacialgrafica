@@ -37,10 +37,12 @@
 <script type="text/javascript" src="brazo.js"></script>
 <script type="text/javascript" src="turbina.js"></script>
 <script type="text/javascript" src="Cable.js"></script>
+<script type="text/javascript" src="luzPuntual.js"></script>
+<script type="text/javascript" src="luzDireccional.js"></script>
 
 
-<script id="shader-adentro-fs" type="x-shader/x-fragment">
-    precision mediump float;
+<script id="shader-posta-fs" type="x-shader/x-fragment">
+        precision mediump float;
 
 		// luces
 		struct PointLight {
@@ -53,8 +55,8 @@
 			vec3 ambient;
 			vec3 intensity;
 		};
-		uniform PointLight pointLights[4]; //5 lces puntuales dentro del angar
-		uniform DirLight dirLights[1]; //luz del sol y de la tierra, direccionales
+		//uniform PointLight pointLights[4]; //5 lces puntuales dentro del angar
+		uniform DirLight dirLights[2]; //luz del sol y de la tierra, direccionales
 		uniform float numLights;
 		
 		// material
@@ -65,14 +67,11 @@
 		uniform float uKs;
 		uniform float uShininess;
 		uniform float uReflectiveness;
-		uniform bool uHasTexture;
+		uniform float uUseTexture;
 		uniform bool uUseLights;
-		uniform float uTime;
-		uniform bool uBlendTexture;//dudoso
 		
 		uniform bool uUseNormalMap;
 		uniform bool uUseReflection;
-		uniform bool uUseDiffuse;//a ver
 		
 		varying vec3 vColor;
 		varying vec3 vNormal;
@@ -111,27 +110,60 @@
 			
 			vec3 viewDir = normalize(vertPos - uViewPos);
 			
-			if(uHasTexture){
+			/*if(uHasTexture){
 				color = texture2D(uSampler, texCoord).rgb;
 				//colorea encima de la textura de determinado color
 				if(uBlendTexture){
 					color *= vColor;
 				}
-			}
+			}*/
+
+            //vec4 textureColor = texture2D(uSampler, vec2(texCoord.s, texCoord.t)) * uUseTexture;
+            //vec4 vertexColor = vColor * (1.0 - uUseTexture); 
+            //color = textureColor + vertexColor;
+            
+
+
 			//si no usa el modelo de Pong
 			if(!uUseLights){
 				gl_FragColor = vec4(color, 1.0);
 				return;
 			}
 			
-			if (uUseReflection) {
-				vec3 lookup = reflect(viewDir, normal);
-				color = mix(color, vec3(textureCube(uCubeSampler, lookup)), uReflectiveness); //MIRAR
-			}
+			//if (uUseReflection) {
+			//	vec3 lookup = reflect(viewDir, normal);
+			//	color = mix(color, vec3(textureCube(uCubeSampler, lookup)), uReflectiveness); //MIRAR
+			//}
 			
 			vec3 color_final = vec3(0.0, 0.0, 0.0);
 			
-			// point lights
+			// dir lights
+            for(int i = 0; i < 2; ++i){
+            
+                // cosas que dependen de cada luz
+                vec3 Ia = dirLights[i].ambient; // luz ambiente (cada luz contribuye a esto)
+                vec3 Ip = dirLights[i].intensity; // intensidad de la luz ficticia
+                vec3 lightDir = normalize(dirLights[i].direction);
+                
+                vec3 reflectDir = reflect(lightDir, normal);
+                // esto es para el factor de atenuacion segun la distancia al observador
+                // constantes (de 0 a 1)
+                float c1 = 0.0;
+                float c2 = 0.02;
+                float c3 = 0.0;
+                float dist_to_light = 9.0;//OJO
+                float fatt = min(1.0 / (c1 + c2*dist_to_light + c3*pow(dist_to_light, 2.0)), 1.0);          
+                float lambertian = max(dot(lightDir,normal), 0.0);
+                float specular = 0.0;
+                if(lambertian > 0.0) {
+                   float specAngle = max(dot(reflectDir, viewDir), 0.0);
+                   specular = pow(specAngle, uShininess);
+                }
+                
+                color_final += Ia * color * uKa + (Ip) * fatt * (color * uKd * lambertian + uColorSpecular * uKs * specular);
+            }
+
+        /*    // point lights
 			for(int i = 0; i < 5; ++i){
 			
 				// cosas que dependen de cada luz
@@ -159,130 +191,13 @@
 									(Ip ) * fatt * (color * uKd * lambertian + 
 												uColorSpecular * uKs * specular);
 			}
-					
+		*/			
 			gl_FragColor = vec4(color_final, 1.0);
 			
 		}
 
 </script>
 
-<script id="shader-afuera-fs" type="x-shader/x-fragment">
-    precision mediump float;
-
-		// luces
-		struct DirLight {
-			vec3 direction;
-			vec3 ambient;
-			vec3 intensity;
-		};
-		
-		uniform DirLight dirLights[1]; //luz del sol y de la tierra, direccionales
-		uniform float numLights;
-		
-		// material
-		uniform vec3 uViewPos;
-		uniform vec3 uColorSpecular;
-		uniform float uKa;
-		uniform float uKd;
-		uniform float uKs;
-		uniform float uShininess;
-		uniform float uReflectiveness;
-		uniform bool uHasTexture;
-		uniform bool uUseLights;
-		uniform float uTime;
-		uniform bool uBlendTexture;//dudoso
-		
-		uniform bool uUseNormalMap;
-		uniform bool uUseReflection;
-		uniform bool uUseDiffuse;//a ver
-		
-		varying vec3 vColor;
-		varying vec3 vNormal;
-		varying vec3 vTangente;
-		varying vec3 vBinormal;
-		varying vec3 vertPos;
-		varying vec2 vTextureCoord;
-		
-		uniform sampler2D uSampler; //MAGIC
-		uniform sampler2D uNormalSampler;
-		uniform sampler2D uCubeSampler;
-		//ver si hace falta un sampler para la reflexion 2D
-		
-		void main() {
-			
-			vec2 texCoord = vTextureCoord;
-			vec2 secTexCoord = vTextureCoord;
-			vec3 color = vColor;
-
-			
-			float mix_factor = 1.0;
-			
-			vec3 normal = normalize(vNormal);	
-			
-			if (uUseNormalMap){
-				vec3 tangent = normalize(vTangente);
-				vec3 binormal = normalize(vBinormal);
-			
-				mat3 tbn = mat3(tangent, binormal, normal);
-				normal = texture2D(uNormalSampler, texCoord).xyz;
-				normal = normalize((normal - vec3(0.5, 0.5, 0.5)) * 2.0); //lleva xyz cada valor entre -1 y 1
-			
-				//Transform the normal vector in the RGB channels to tangent space
-				normal = normalize(tbn * normal);
-			}
-			
-			vec3 viewDir = normalize(vertPos - uViewPos);
-			
-			if(uHasTexture){
-				color = texture2D(uSampler, texCoord).rgb;
-				//colorea encima de la textura de determinado color
-				if(uBlendTexture){
-					color *= vColor;
-				}
-			}
-			//si no usa el modelo de Pong
-			if(!uUseLights){
-				gl_FragColor = vec4(color, 1.0);
-				return;
-			}
-			
-			if (uUseReflection) {
-				vec3 lookup = reflect(viewDir, normal);
-				color = mix(color, vec3(textureCube(uCubeSampler, lookup)), uReflectiveness); //MIRAR
-			}
-			
-			vec3 color_final = vec3(0.0, 0.0, 0.0);
-					
-			// dir lights
-			for(int i = 0; i < 2; ++i){
-			
-				// cosas que dependen de cada luz
-				vec3 Ia = dirLights[i].ambient; // luz ambiente (cada luz contribuye a esto)
-				vec3 Ip = dirLights[i].intensity; // intensidad de la luz ficticia
-				vec3 lightDir = normalize(dirLights[i].direction);
-				
-				vec3 reflectDir = reflect(lightDir, normal);
-				// esto es para el factor de atenuacion segun la distancia al observador
-				// constantes (de 0 a 1)
-				float c1 = 0.0;
-				float c2 = 0.02;
-				float c3 = 0.0;
-				float dist_to_light = 9.0;//OJO
-				float fatt = min(1.0 / (c1 + c2*dist_to_light + c3*pow(dist_to_light, 2.0)), 1.0);			
-				float lambertian = max(dot(lightDir,normal), 0.0);
-				float specular = 0.0;
-				if(lambertian > 0.0) {
-				   float specAngle = max(dot(reflectDir, viewDir), 0.0);
-				   specular = pow(specAngle, uShininess);
-				}
-				
-				color_final += Ia * color * uKa + (Ip) * fatt * (color * uKd * lambertian + uColorSpecular * uKs * specular);
-			}
-			gl_FragColor = vec4(color_final, 1.0);
-		}
-		
-		
-</script>
 
 <script id="shader-fs" type="x-shader/x-fragment">
     precision mediump float;
@@ -307,51 +222,38 @@
     attribute vec3 aVertexNormal;
     attribute vec2 aTextureCoord;
     attribute vec3 aVertexColor;
+    attribute vec3 aVertexTangent;
+    attribute vec3 aVertexBinormal;
 
     uniform mat4 uViewMatrix;
     uniform mat4 uModelMatrix;
     uniform mat4 uPMatrix;
-    uniform mat3 uNMatrix;
+    uniform mat4 uNMatrix;
 
     uniform vec3 uAmbientColor;
 
     uniform vec3 uLightPosition;
     uniform vec3 uDirectionalColor;
 
-    uniform bool uUseLighting;
+    uniform bool uUseLights;
 
-    varying vec4 vColor;
+    //varying vec3 vLightWeighting;
+    varying vec3 vColor;
+    varying vec3 vNormal;
+    varying vec3 vTangente;
+    varying vec3 vBinormal;
+    varying vec3 vertPos;
     varying vec2 vTextureCoord;
-    varying vec3 vLightWeighting;
 
     void main(void) {
     
-        // Transformamos al vértice al espacio de la cámara
-        vec4 pos_camera_view = uViewMatrix * uModelMatrix * vec4(aVertexPosition, 1.0);
-        
-        // Transformamos al vértice al espacio de la proyección
-        gl_Position = uPMatrix * pos_camera_view;
-        
-        // Coordenada de textura sin modifiaciones
+        gl_Position = uPMatrix * uViewMatrix * uModelMatrix * vec4(aVertexPosition, 1.0);
+        vertPos = vec3(uModelMatrix * vec4(aVertexPosition, 1.0));
+        vColor = aVertexColor;
+        vNormal = normalize(vec3(uNMatrix * vec4(normalize(aVertexNormal), 0.0)));
+        vBinormal = normalize(vec3(uNMatrix * vec4(normalize(aVertexBinormal), 0.0)));
+        vTangente = normalize(vec3(uNMatrix * vec4(normalize(aVertexTangent), 0.0)));
         vTextureCoord = aTextureCoord;
-
-        //Color
-        vColor = vec4(aVertexColor,1.0);
-                            
-        ////////////////////////////////////////////
-        // Calculos de la iluminación
-        vec3 light_dir =  uLightPosition - vec3( pos_camera_view );
-        normalize(light_dir);
-        if (!uUseLighting) 
-        {
-            vLightWeighting = vec3(1.0, 1.0, 1.0);
-        }
-        else 
-        {
-            vec3 transformedNormal = normalize(uNMatrix * aVertexNormal);
-            float directionalLightWeighting = max(dot(transformedNormal, light_dir), 0.0);
-            vLightWeighting = uAmbientColor + uDirectionalColor * directionalLightWeighting;
-        }
         ////////////////////////////////////////////
     }
 </script>
@@ -414,7 +316,7 @@
 
 
        function initShaders() {
-        var fragmentShader = getShader(gl, "shader-fs");
+        var fragmentShader = getShader(gl, "shader-posta-fs");
         var vertexShader = getShader(gl, "shader-vs");
 
         glProgram = gl.createProgram();
@@ -440,16 +342,75 @@
         glProgram.vertexNormalAttribute = gl.getAttribLocation(glProgram, "aVertexNormal");
         gl.enableVertexAttribArray(glProgram.vertexNormalAttribute);
 
+        glProgram.vertexBinormalAttribute = gl.getAttribLocation(glProgram, "aVertexBinormal");
+        gl.enableVertexAttribArray(glProgram.vertexBinormalAttribute);
+
+        glProgram.vertexTangentAttribute = gl.getAttribLocation(glProgram, "aVertexTangent");
+        gl.enableVertexAttribArray(glProgram.vertexTangentAttribute);
+
         glProgram.pMatrixUniform = gl.getUniformLocation(glProgram, "uPMatrix");
         glProgram.ViewMatrixUniform = gl.getUniformLocation(glProgram, "uViewMatrix");
         glProgram.ModelMatrixUniform = gl.getUniformLocation(glProgram, "uModelMatrix");
         glProgram.nMatrixUniform = gl.getUniformLocation(glProgram, "uNMatrix");
-        glProgram.samplerUniform = gl.getUniformLocation(glProgram, "uSampler");
         glProgram.useLightingUniform = gl.getUniformLocation(glProgram, "uUseLighting");
         glProgram.ambientColorUniform = gl.getUniformLocation(glProgram, "uAmbientColor");
         glProgram.lightingDirectionUniform = gl.getUniformLocation(glProgram, "uLightPosition");
         glProgram.directionalColorUniform = gl.getUniformLocation(glProgram, "uDirectionalColor");
         glProgram.UseTexture = gl.getUniformLocation(glProgram, "uUseTexture");
+    
+
+        glProgram.dirLights = new Array;
+        for(var i = 0; i < 2; ++i){
+            var light = new Array;
+            light.push(gl.getUniformLocation(glProgram, "dirLights[" + i + "]." + "direction"));
+            light.push(gl.getUniformLocation(glProgram, "dirLights[" + i + "]." + "ambient"));
+            light.push(gl.getUniformLocation(glProgram, "dirLights[" + i + "]." + "intensity"));
+            glProgram.dirLights.push(light);
+        }
+            
+       /* glProgram.pointLights = new Array;
+        for(var i = 0; i < 6; ++i){
+            var light = new Array;
+            light.push(gl.getUniformLocation(glProgram, "pointLights[" + i + "]." + "position"));
+            light.push(gl.getUniformLocation(glProgram, "pointLights[" + i + "]." + "ambient"));
+            light.push(gl.getUniformLocation(glProgram, "pointLights[" + i + "]." + "intensity"));
+            glProgram.pointLights.push(light);
+        }
+    */
+        glProgram.numLights = gl.getUniformLocation(glProgram, "numLights");
+        
+        glProgram.uViewPos = gl.getUniformLocation(glProgram, "uViewPos");
+        glProgram.uColorSpecular = gl.getUniformLocation(glProgram, "uColorSpecular");
+        glProgram.uKa = gl.getUniformLocation(glProgram, "uKa");
+        glProgram.uKd = gl.getUniformLocation(glProgram, "uKd");
+        glProgram.uKs = gl.getUniformLocation(glProgram, "uKs");
+        glProgram.uShininess = gl.getUniformLocation(glProgram, "uShininess");
+        glProgram.uReflectiveness = gl.getUniformLocation(glProgram, "uReflectiveness");
+        
+
+        glProgram.uUseNormalMap = gl.getUniformLocation(glProgram, "uUseNormalMap");
+        gl.uniform1i(glProgram.uUseNormalMap, 0);
+        glProgram.uUseReflection = gl.getUniformLocation(glProgram, "uUseReflection");
+        gl.uniform1i(glProgram.uUseReflection, 0);
+        glProgram.uUseLights = gl.getUniformLocation(glProgram, "uUseLights");
+        gl.uniform1i(glProgram.uUseLights, 0);
+        
+        glProgram.uSampler = gl.getUniformLocation(glProgram, "uSampler");
+        gl.uniform1i(glProgram.uSampler, 0);
+        glProgram.uNormalSampler = gl.getUniformLocation(glProgram, "uNormalSampler");
+        gl.uniform1i(glProgram.uNormalSampler, 1);
+        glProgram.uCubeSampler = gl.getUniformLocation(glProgram, "uCubeSampler");
+        gl.uniform1i(glProgram.uCubeSampler, 2);
+        //glProgram.uHeightSampler = gl.getUniformLocation(glProgram, "uHeightSampler");
+        //gl.uniform1i(glProgram.uHeightSampler, 3);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+        gl.activeTexture(gl.TEXTURE3);
+        gl.bindTexture(gl.TEXTURE_2D, null);
     }
 
 
@@ -538,12 +499,16 @@
         this.position_buffer = null;
         this.normal_buffer = null;
         this.texture_coord_buffer = null;
+        this.tangent_buffer = null;
+        this.binormal_buffer = null;
         this.color_buffer = null;
         this.index_buffer = null;
 
         this.webgl_position_buffer = null;
         this.webgl_normal_buffer = null;
         this.webgl_texture_coord_buffer = null;
+        this.webgl_tangent_buffer = null;
+        this.webgl_binormal_buffer = null;
         this.webgl_color_buffer = null;
         this.webgl_index_buffer = null;
         
@@ -572,6 +537,8 @@
             this.normal_buffer = [];
             this.texture_coord_buffer = [];
             this.color_buffer = [];
+            this.tangent_buffer = [];
+            this.binormal_buffer = [];
 
             var latNumber;
             var longNumber;
@@ -592,9 +559,21 @@
                     var u = 1.0 - (longNumber / this.longitudeBands);
                     var v = 1.0 - (latNumber / this.latitudeBands);
 
+                    normal = vec3.fromValues(x,y,z);
                     this.normal_buffer.push(x);
                     this.normal_buffer.push(y);
                     this.normal_buffer.push(z);
+
+                    tangente = vec3.fromValues(0,0,0); //CORREGIR
+                    this.tangent_buffer.push(tangente[0]);
+                    this.tangent_buffer.push(tangente[1]);
+                    this.tangent_buffer.push(tangente[2]);
+
+                    binormal = vec3.create();
+                    vec3.cross(binormal,tangente,normal);
+                    this.binormal_buffer.push(binormal[0]);
+                    this.binormal_buffer.push(binormal[1]);
+                    this.binormal_buffer.push(binormal[2]);
 
                     this.texture_coord_buffer.push(u);
                     this.texture_coord_buffer.push(v);
@@ -632,6 +611,18 @@
             gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.normal_buffer), gl.STATIC_DRAW);
             this.webgl_normal_buffer.itemSize = 3;
             this.webgl_normal_buffer.numItems = this.normal_buffer.length / 3;
+
+            this.webgl_binormal_buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_binormal_buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.binormal_buffer), gl.STATIC_DRAW);
+            this.webgl_binormal_buffer.itemSize = 3;
+            this.webgl_binormal_buffer.numItems = this.binormal_buffer.length / 3;
+
+            this.webgl_tangent_buffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_tangent_buffer);
+            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.tangent_buffer), gl.STATIC_DRAW);
+            this.webgl_tangent_buffer.itemSize = 3;
+            this.webgl_tangent_buffer.numItems = this.tangent_buffer.length / 3;
 
             this.webgl_texture_coord_buffer = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_texture_coord_buffer);
@@ -673,16 +664,22 @@
             gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_normal_buffer);
             gl.vertexAttribPointer(glProgram.vertexNormalAttribute, this.webgl_normal_buffer.itemSize, gl.FLOAT, false, 0, 0);
 
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_binormal_buffer);
+            gl.vertexAttribPointer(glProgram.vertexBinormalAttribute, this.webgl_binormal_buffer.itemSize, gl.FLOAT, false, 0, 0);
+
+            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_tangent_buffer);
+            gl.vertexAttribPointer(glProgram.vertexTangentAttribute, this.webgl_tangent_buffer.itemSize, gl.FLOAT, false, 0, 0);
+
             gl.activeTexture(gl.TEXTURE0);
             gl.bindTexture(gl.TEXTURE_2D, this.texture);
             gl.uniform1i(glProgram.samplerUniform, 0);
 
             gl.uniformMatrix4fv(glProgram.ModelMatrixUniform, false, modelMatrix);
-            var normalMatrix = mat3.create();
-            mat3.fromMat4(normalMatrix, modelMatrix);
-            mat3.invert(normalMatrix, normalMatrix);
-            mat3.transpose(normalMatrix, normalMatrix);
-            gl.uniformMatrix3fv(glProgram.nMatrixUniform, false, normalMatrix);
+            
+            var normalMatrix = mat4.create();
+            mat4.invert(normalMatrix, normalMatrix);
+            mat4.transpose(normalMatrix, normalMatrix);
+            gl.uniformMatrix4fv(glProgram.nMatrixUniform, false, normalMatrix);
 
             gl.bindTexture(gl.TEXTURE_2D, this.texture);
             
@@ -870,6 +867,56 @@
         //vec3.transformMat4(lightPosition, lightPosition, CameraMatrix);
         gl.uniform3fv(glProgram.lightingDirectionUniform, lightPosition);           
         
+        
+        //luces direccionales
+
+        
+        
+        luzSol.render();
+
+
+        luzTierra.render();
+            
+        // luces puntuales
+        /*var ip_night = 0.25;
+        var ia_night = 0.05;
+        light_noche1 = new PointLight(vec3.fromValues(-20.0, -10.0, 5.0), 
+                                    vec3.fromValues(ip_night, ip_night, ip_night), 
+                                    vec3.fromValues(ia_night, ia_night, ia_night));
+        escena.addLight(light_noche1);
+        light_noche1.turnOff();
+                                    
+        light_noche2 = new PointLight(vec3.fromValues(20.0, -10.0, -10.0), 
+                                    vec3.fromValues(ip_night, ip_night, ip_night), 
+                                    vec3.fromValues(ia_night, ia_night, ia_night));
+        escena.addLight(light_noche2);
+        light_noche2.turnOff();
+        
+        light_noche3 = new PointLight(vec3.fromValues(30.0, -10.0, 40.0), 
+                                    vec3.fromValues(ip_night, ip_night, ip_night), 
+                                    vec3.fromValues(ia_night, ia_night, ia_night));
+        escena.addLight(light_noche3);
+        light_noche3.turnOff();
+                                    
+        light_noche4 = new PointLight(vec3.fromValues(40.0, -12.0, -20.0), 
+                                    vec3.fromValues(ip_night, ip_night, ip_night), 
+                                    vec3.fromValues(ia_night, ia_night, ia_night));
+        escena.addLight(light_noche4);
+        light_noche4.turnOff();
+        
+        light_noche5 = new PointLight(vec3.fromValues(-20.0, -10.0, -20.0), 
+                                    vec3.fromValues(ip_night, ip_night, ip_night), 
+                                    vec3.fromValues(ia_night, ia_night, ia_night));
+        escena.addLight(light_noche5);
+        light_noche5.turnOff();
+        
+        light_noche6 = new PointLight(vec3.fromValues(-35.0, -10.0, 35.0), 
+                                    vec3.fromValues(ip_night, ip_night, ip_night), 
+                                    vec3.fromValues(ia_night, ia_night, ia_night));
+        escena.addLight(light_noche6);
+
+*/
+
         /////////////////////////////////////////////////////
         // Definimos la ubicación de la camara
         // Pensamos por el momento marsamente la posición de la cámara, la cual siempre mira al mars.
@@ -893,7 +940,7 @@
 
         ///////////////////////////////////////////////////////
         //
-        // Dibujamos la Tierra
+  /*      // Dibujamos la Tierra
 
         // Configuramos la iluminación para la Tierra
         gl.uniform3f(glProgram.ambientColorUniform, 0.2, 0.2, 0.2 );
@@ -947,7 +994,7 @@
         deimos.draw(model_matrix_deimos);
         //
         ////////////////////////////////////////////////////////
-
+*/
         ///////////////////////////////////////////////////////
         //
         // Dibujamos la Luna
@@ -1089,6 +1136,15 @@
 
         initGL(canvas);
         initShaders();
+
+        luzSol = new LuzDireccional(vec3.fromValues(1, 0, 0), 
+                                        vec3.fromValues(5.0, 5.0, 5.0), 
+                                        vec3.fromValues(1.0, 1.0, 1.0));
+
+        luzTierra = new LuzDireccional(vec3.fromValues(0, 1, 0), 
+                                        vec3.fromValues(0.5, 0.5, 0.5), 
+                                        vec3.fromValues(0.0, 0.0, 1.0));
+
 
         deimos = new TexturedSphere(64, 64);
         deimos.initBuffers();

@@ -34,12 +34,14 @@ var Geometria = Base.extend({
 	this.webgl_tangent_buffer = null;
 	this.webgl_binormal_buffer = null;
 
+	this.useLights = true;
+
 	this.ka = 0.1;
 	this.kd = 0.1;
 	this.ks = 0.1;
 	this.shininess = 0.0;
 	this.color_diffuse = 0.0;
-	this.color_specular = 0.0;
+	this.color_specular = vec3.fromValues(0.0,0.0,0.0);
 	this.reflectiveness = 0.0;
 
 	this.useNormalMap = false;
@@ -196,19 +198,19 @@ var Geometria = Base.extend({
 		this.useNormalMap = true;
 		this.normalMap = this.loadMap(map_file);
 	},
-
+/*
 	initDiffuseMap: function(map_file)
 	{
 		this.useDiffuseMap = true;
 		this.diffuseMap = this.loadMap(map_file);
 	},
-	
-	initIlumMap: function(map_file)
+*/	
+/*	initIlumMap: function(map_file)
 	{
 		this.useIlumMap = true;
 		this.ilumMap = this.loadMap(map_file);
 	},
-
+*/
 	initReflexMap: function(map_file)
 	{
 		this.useReflexMap = true;
@@ -321,6 +323,19 @@ var Geometria = Base.extend({
 	{
 		gl.uniform1f(glProgram.UseTexture, this.useTexture);
 
+        gl.uniform1i(glProgram.uUseNormalMap, this.useNormalMap);
+        gl.uniform1i(glProgram.uUseReflection, this.useReflexMap);
+        gl.uniform1i(glProgram.uUseLights, this.useLights);
+
+        gl.uniform1f(glProgram.uKa, this.ka);
+        gl.uniform1f(glProgram.uKd, this.kd);
+        gl.uniform1f(glProgram.uKs, this.ks);
+        gl.uniform1f(glProgram.uShininess, this.shininess);
+        gl.uniform1f(glProgram.uReflectiveness, this.reflectiveness);
+
+       // gl.uniform3fv(glProgram.uColorSpecular, this.color_specular);
+                
+
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_position_buffer);
 		gl.vertexAttribPointer(glProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);
 	
@@ -335,35 +350,38 @@ var Geometria = Base.extend({
 
 		gl.activeTexture(gl.TEXTURE0);
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
-        gl.uniform1i(glProgram.samplerUniform, 0);
+        gl.uniform1i(glProgram.uSampler, 0);
+
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, this.normalMap);
+        gl.uniform1i(glProgram.uNormalSampler, 1);
+
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.reflexMap);
+        gl.uniform1i(glProgram.uCubeSampler, 2);
 		
         var model_matrix_final = mat4.create();
 		mat4.multiply(model_matrix_final, m, this.model_matrix);
 		gl.uniformMatrix4fv(glProgram.ModelMatrixUniform, false, model_matrix_final); //le pasa al programa de vertices la matriz de modelado del objeto
 
-        var normals_matrix = mat3.create();
-        mat3.fromMat4(normals_matrix, model_matrix_final);
-        mat3.invert(normals_matrix, normals_matrix);
-        mat3.transpose(normals_matrix, normals_matrix);
-		gl.uniformMatrix3fv(glProgram.nMatrixUniform, false, normals_matrix);
+        var normals_matrix = mat4.create();
+        mat4.invert(normals_matrix, model_matrix_final);
+		mat4.transpose(normals_matrix, normals_matrix);
+		gl.uniformMatrix4fv(glProgram.nMatrixUniform, false, normals_matrix);
 
-		gl.bindTexture(gl.TEXTURE_2D, this.texture);
+		//gl.bindTexture(gl.TEXTURE_2D, this.texture);
 		
-		/*if(this.webgl_tangent_buffer != null)
+		if(this.webgl_tangent_buffer != null)
 		{
-			var vertexTangentAttribute = gl.getAttribLocation(glProgram, "aVertexTangent");
-			gl.enableVertexAttribArray(vertexTangentAttribute);
 			gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_tangent_buffer);
 			gl.vertexAttribPointer(glProgram.vertexTangentAttribute, 3, gl.FLOAT, false, 0, 0);
 		}
 		
 		if(this.webgl_binormal_buffer != null)
 		{
-			var vertexBinormalAttribute = gl.getAttribLocation(glProgram, "aVertexBinormal");
-			gl.enableVertexAttribArray(vertexBinormalAttribute);
 			gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_binormal_buffer);
 			gl.vertexAttribPointer(glProgram.vertexBinormalAttribute, 3, gl.FLOAT, false, 0, 0);
-		}*/
+		}
 		
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.webgl_index_buffer);
 

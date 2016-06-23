@@ -22,6 +22,15 @@ var CuerpoNave = Geometria.extend({
 						[[0,1,0], [0,1,0], [0,1,0], [0,1,0], [0,1,0], [0,1,0], [0,1,0]],
 						[[0,1,0], [0,1,0], [0,1,0], [0,1,0], [0,1,0], [0,1,0], [0,1,0]] ];
 
+		this.tangentes = [ [[0,1,0], [0,1,0], [0,1,0], [0,1,0], [0,1,0], [0,1,0]],
+						[[0,1,1], [0,1,1], [0,1,1], [0,1,1], [0,1,1], [0,1,1]],
+						[[0,0,1], [0,0,1], [0,0,1], [0,0,1], [0,0,1], [0,0,1]],
+						[[0,-1,0], [0,-1,0], [0,-1,0], [0,-1,0], [0,-1,0], [0,-1,0]],
+						[[0,-1,0], [0,-1,0], [0,-1,0], [0,-1,0], [0,-1,0], [0,-1,0]],
+						[[0,1,-1], [0,1,-1], [0,1,-1], [0,1,-1], [0,1,-1], [0,1,-1]],
+						[[0,0,-1], [0,0,-1], [0,0,-1], [0,0,-1], [0,0,-1], [0,0,-1]],
+						[[0,1,0], [0,1,0], [0,1,0], [0,1,0], [0,1,0], [0,1,0], [0,1,0]],
+						[[0,1,0], [0,1,0], [0,1,0], [0,1,0], [0,1,0], [0,1,0], [0,1,0]] ];  //CORREGIR TANGENTES
 
 		Geometria.prototype.initialize.call(this);
 
@@ -61,6 +70,7 @@ var CuerpoNave = Geometria.extend({
 			{
 				punto = this.puntos[row][col];
 				normal = this.normales[row][col];
+				tangente = vec3.fromValues(0,0,0);
 				
 				this.position_buffer.push(punto[0]);
 				this.position_buffer.push(punto[1]);
@@ -77,6 +87,12 @@ var CuerpoNave = Geometria.extend({
 				this.normals_buffer.push(normal[0]);
 				this.normals_buffer.push(normal[1]); 
 				this.normals_buffer.push(normal[2]);
+
+				binormal = vec3.create();
+				vec3.cross(binormal,tangente,normal);
+				this.binormal_buffer.push(binormal[0]);
+				this.binormal_buffer.push(binormal[1]);
+				this.binormal_buffer.push(binormal[2]);
 
 				this.texture_coord_buffer.push(0.0);
 				this.texture_coord_buffer.push(0.0);

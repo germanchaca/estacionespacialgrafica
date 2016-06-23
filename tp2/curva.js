@@ -140,6 +140,12 @@ var Curva = Geometria.extend({
 			this.normals_buffer.push(normal.y); //La implementacion de normales solo sirve si Z nunca es paralela a la tangente
 			this.normals_buffer.push(normal.z);
 
+			binormal = vec3.create();
+			vec3.cross(binormal,tangente,normal);
+			this.binormal_buffer.push(binormal[0]);
+			this.binormal_buffer.push(binormal[1]);
+			this.binormal_buffer.push(binormal[2]);
+
 			this.texture_coord_buffer.push(0.0);
 			this.texture_coord_buffer.push(0.0);
 			

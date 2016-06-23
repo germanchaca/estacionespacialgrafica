@@ -8,6 +8,8 @@ var TapaNaveDelantera = Geometria.extend({
 
 		this.normal = [-1,0,0];
 		
+		this.tangente = [0,0,0];
+
 		Geometria.prototype.initialize.call(this);
 
 		this.useTexture = 0.0;
@@ -45,6 +47,12 @@ var TapaNaveDelantera = Geometria.extend({
 				this.normals_buffer.push(this.normal[0]);
 				this.normals_buffer.push(this.normal[1]); 
 				this.normals_buffer.push(this.normal[2]);
+
+				binormal = vec3.create();
+				vec3.cross(binormal,this.tangente,this.normal);
+				this.binormal_buffer.push(binormal[0]);
+				this.binormal_buffer.push(binormal[1]);
+				this.binormal_buffer.push(binormal[2]);
 
 				this.texture_coord_buffer.push(0.0);
 				this.texture_coord_buffer.push(0.0);
