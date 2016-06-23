@@ -270,7 +270,7 @@ var Geometria = Base.extend({
 	//dibujar el VertexGrid. render
 	draw: function(m)
 	{
-		gl.uniform1f(glProgram.UseTexture, 0.0);
+		gl.uniform1f(glProgram.UseTexture, this.UseTexture);
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_position_buffer);
 		gl.vertexAttribPointer(glProgram.vertexPositionAttribute, 3, gl.FLOAT, false, 0, 0);

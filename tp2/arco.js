@@ -99,7 +99,7 @@ var Arco = SupBarrido.extend({
 
 
 
-		this.useTexture = 0.0;
+		//this.useTexture = 0.0;
 	
 	},
 })

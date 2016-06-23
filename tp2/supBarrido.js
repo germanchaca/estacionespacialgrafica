@@ -38,7 +38,7 @@ var SupBarrido = Geometria.extend({
 		var baseRecorrido;
 		var puntos,tangentes,normales
 					
-		for (var row = 0; row < this.rows; row++)
+		for (var row = 0.0; row < this.rows; row++)
 		{
 			puntoRecorrido = this.puntosRecorrido[row];
 			baseRecorrido = this.basesRecorrido[row];
@@ -46,7 +46,7 @@ var SupBarrido = Geometria.extend({
 			puntos = poligonoTransformado.puntos;
 			tangentes = poligonoTransformado.tangentes;
 			normales = poligonoTransformado.normales;
-			for (var col = 0; col < this.cols; col++)
+			for (var col = 0.0; col < this.cols; col++)
 			{
 				punto = puntos[col];
 				this.position_buffer.push(punto[0]);
@@ -67,8 +67,8 @@ var SupBarrido = Geometria.extend({
 				this.normals_buffer.push(normal[1]);
 				this.normals_buffer.push(normal[2]);
 
-				this.texture_coord_buffer.push(col/this.cols);
-				this.texture_coord_buffer.push(row/this.rows);
+				this.texture_coord_buffer.push(1.0-col/this.cols);
+				this.texture_coord_buffer.push(1.0-row/this.rows);
 			}
 		}
 	
