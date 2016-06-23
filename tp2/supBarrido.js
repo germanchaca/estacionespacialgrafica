@@ -67,8 +67,8 @@ var SupBarrido = Geometria.extend({
 				this.normals_buffer.push(normal[1]);
 				this.normals_buffer.push(normal[2]);
 
-				this.texture_coord_buffer.push(0.0);
-				this.texture_coord_buffer.push(0.0);
+				this.texture_coord_buffer.push(col/this.cols);
+				this.texture_coord_buffer.push(row/this.rows);
 			}
 		}
 	

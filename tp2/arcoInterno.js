@@ -10,7 +10,8 @@ var ArcoInterno = SupBarrido.extend({
 		
 		SupBarrido.prototype.initialize.call(this, poligono, puntosRecorrido, basesRecorrido);
 	
-		this.useTexture = 0.0;
-	
+		this.useTexture = 1.0;
+
+		this.initTexture("earthh.jpg");	
 	},
 })

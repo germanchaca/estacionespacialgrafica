@@ -40,6 +40,10 @@ var Arco = SupBarrido.extend({
 		//basesRecorrido = [ [[1,0,0],[0,1,0],[0,0,1]]
 
 		SupBarrido.prototype.initialize.call(this, poligono, puntosRecorrido, basesRecorrido);
+
+		this.useTexture = 1.0;
+
+		this.initTexture("earthh.jpg");
 		
 		var arcoInterno = new ArcoInterno(puntosRecorrido,basesRecorrido);
 		this.addDependencie(arcoInterno);
