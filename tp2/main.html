@@ -78,7 +78,6 @@
 		uniform bool uUseNormalMap;
 		uniform bool uUseReflection;
 		
-        uniform int vTextureIndex;
 
         //varying int vTextureIndex;
 		varying vec3 vColor;
@@ -86,7 +85,7 @@
 		varying vec3 vTangente;
 		varying vec3 vBinormal;
 		varying vec3 vertPos;
-		varying vec2 vTextureCoord;
+		varying vec3 vTextureCoord;
 		
 		uniform sampler2D uSampler; //MAGIC
         uniform sampler2D uSampler2;
@@ -97,7 +96,8 @@
 		
 		void main() {
 			
-			vec2 texCoord = vTextureCoord;
+			vec2 texCoord = vTextureCoord.xy;
+            float indice = vTextureCoord.z;
 			
 			vec3 normal = normalize(vNormal);	
 			
@@ -114,13 +114,14 @@
 			}
 
             vec3 textureColor;
-            if (vTextureIndex == 0)
+            textureColor = texture2D(uSampler, texCoord).rgb * uUseTexture;
+            if (indice == 0.0)
                 textureColor = texture2D(uSampler, texCoord).rgb * uUseTexture;
-            if (vTextureIndex == 1)
+            if (indice == 1.0)
                 textureColor = texture2D(uSampler2, texCoord).rgb * uUseTexture;
-            if (vTextureIndex == 2)
+            if (indice == 2.0)
                 textureColor = texture2D(uSampler3, texCoord).rgb * uUseTexture;
-            
+        
             //textureColor = texture2D(uSampler, texCoord).rgb * uUseTexture;
             vec3 vertexColor = vColor * (1.0 - uUseTexture); 
             vec3 color = textureColor + vertexColor;
@@ -261,8 +262,7 @@
     varying vec3 vTangente;
     varying vec3 vBinormal;
     varying vec3 vertPos;
-    varying vec2 vTextureCoord;
-    varying float vTextureIndex;
+    varying vec3 vTextureCoord;
 
     void main(void) {
     
@@ -272,8 +272,7 @@
         vNormal = normalize(vec3(uNMatrix * vec4(normalize(aVertexNormal), 0.0)));
         vBinormal = normalize(vec3(uNMatrix * vec4(normalize(aVertexBinormal), 0.0)));
         vTangente = normalize(vec3(uNMatrix * vec4(normalize(aVertexTangent), 0.0)));
-        vTextureCoord = aTextureCoord.xy;
-        vTextureIndex = aTextureCoord.z;
+        vTextureCoord = aTextureCoord;
         ////////////////////////////////////////////
     }
 </script>

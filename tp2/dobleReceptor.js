@@ -17,7 +17,8 @@ var DobleReceptor = Conjunto.extend({
 		this.add(cilindro);
 
 		mat4.translate(transformacion3,transformacion3,[0,0.05,0]);
-		mat4.rotate(transformacion3,transformacion3,Math.PI,[1,0,0]);
+		//mat4.rotate(transformacion3,transformacion3,Math.PI,[0,0,1]);
+		//mat4.rotate(transformacion3,transformacion3,Math.PI,[1,0,0]);
 		mat4.rotate(transformacion3,transformacion3,angulo,[-1,0,0]);
 		receptor1.applyMatrix(transformacion3);
 		this.add(receptor1);

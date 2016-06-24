@@ -14,6 +14,7 @@ var TapaArco = Geometria.extend({
 
 		cilindro.initTexture("maps/shiphull.jpg");
 	
+		this.initTexture("maps/shiphull.jpg");
 	},
 
 	createGrid: function()

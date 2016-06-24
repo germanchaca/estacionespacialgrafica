@@ -48,6 +48,7 @@ var Arco = SupBarrido.extend({
 		//this.useMultipleTextures = true;
 		this.initTexture("maps/shiphull.jpg");
 		this.initSecondTexture("maps/ventanal.jpg");
+
 		this.initNormalMap("maps/shiphull_normalmap.jpg");
 
 
@@ -77,6 +78,7 @@ var Arco = SupBarrido.extend({
 		for (var i = 0; i < 3; i++)
 		{
 			cilindro = new Cilindro(0.01);
+			cilindro.initTexture("maps/dorado.jpg");
 			transformacion = mat4.create();
 			mat4.rotate(transformacion,transformacion,-0.5*i*Math.PI,[0,1,0]);
 			mat4.rotate(transformacion,transformacion,-0.25*Math.PI,[0,1,0]);
@@ -126,7 +128,9 @@ var Arco = SupBarrido.extend({
 		var rowsByTexture = this.rows/this.NumTextures;
 
 		var rowForTexture;  
-					
+				
+		//var ventanales= [];
+
 		for (var row = 0.0; row < this.rows; row++)
 		{
 			puntoRecorrido = this.puntosRecorrido[row];
@@ -140,6 +144,7 @@ var Arco = SupBarrido.extend({
 
 			for (var col = 0.0; col < this.cols; col++)
 			{
+				//var ventana = 0;
 				punto = puntos[col];
 				this.position_buffer.push(punto[0]);
 				this.position_buffer.push(punto[1]);
@@ -167,19 +172,52 @@ var Arco = SupBarrido.extend({
 
 				if ((Math.abs(punto[1]))<0.2)
 				{	
+					//ventana += 1;
 					this.texture_coord_buffer.push(1.0-col/this.cols);
 					this.texture_coord_buffer.push(1.0-rowForTexture/rowsByTexture);
-					this.texture_coord_buffer.push(1);
+					this.texture_coord_buffer.push(1.0);
 				}
 				else
 				{
 					this.texture_coord_buffer.push(1.0-col/this.cols);
 					this.texture_coord_buffer.push(1.0-rowForTexture/rowsByTexture);
-					this.texture_coord_buffer.push(0);	
+					this.texture_coord_buffer.push(0.0);	
 				}
 				//Agregar indice de paredes/techo
 			}
+			//ventanales.push(ventana);
 		}
+
+
+		/*for (var row = 0.0; row < this.rows; row++)
+		{
+			puntoRecorrido = this.puntosRecorrido[row];
+			baseRecorrido = this.basesRecorrido[row];
+			poligonoTransformado = this.poligono.obtenerPoligonoTransformado(puntoRecorrido, baseRecorrido);
+			puntos = poligonoTransformado.puntos;
+
+			rowForTexture = row%rowsByTexture;
+
+			for (var col = 0.0; col < this.cols; col++)
+			{
+				punto = puntos[col];
+				var ventana = 0:
+				if ((Math.abs(punto[1]))<=0.2)
+				{	
+					this.texture_coord_buffer.push(1.0-ventana/ventanales[col]);
+					this.texture_coord_buffer.push(1.0-rowForTexture/rowsByTexture);
+					this.texture_coord_buffer.push(1.0);
+					ventana += 1;
+				}
+				else
+				{
+					this.texture_coord_buffer.push(1.0-col-ventana/(this.cols-ventanales[col]);
+					this.texture_coord_buffer.push(1.0-rowForTexture/rowsByTexture);
+					this.texture_coord_buffer.push(0.0);	
+				}
+				//Agregar indice de paredes/techo
+			}
+		}*/
 	
 	}
 })
