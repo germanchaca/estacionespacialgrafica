@@ -46,6 +46,7 @@ var EstructuraCentral = SupRevolucion.extend({
 		for (var i = 0; i < 7; i++)
 		{
 			cilindro = new Cilindro(0.01);
+			cilindro.initReflexMap("maps/refMap.jpg");
 			transformacion = mat4.create();
 			mat4.translate(transformacion,transformacion,[0,2.55,0]);
 			mat4.rotate(transformacion,transformacion,-0.25*i*Math.PI,[0,1,0]);

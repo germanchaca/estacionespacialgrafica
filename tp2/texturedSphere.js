@@ -84,4 +84,26 @@ var TexturedSphere = Geometria.extend({
         */
 	},
 
+	createIndexBuffer: function()
+	{
+		this.index_buffer = [];
+      
+        for (latNumber=0; latNumber < this.rows; latNumber++) 
+        {
+            for (longNumber=0; longNumber < this.cols; longNumber++) 
+            {
+                var first = (latNumber * (this.cols + 1)) + longNumber;
+                var second = first + this.rows + 1;
+                this.index_buffer.push(first);
+                this.index_buffer.push(second);
+                this.index_buffer.push(first + 1);
+
+                this.index_buffer.push(second);
+                this.index_buffer.push(second + 1);
+                this.index_buffer.push(first + 1);
+            }
+        }
+        
+	},
+
 })

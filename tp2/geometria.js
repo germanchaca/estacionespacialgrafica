@@ -214,12 +214,13 @@ var Geometria = Base.extend({
 	initReflexMap: function(map_file)
 	{
 		this.useReflexMap = true;
-		this.reflexMap = this.loadMap(map_file);
+		//this.reflexMap = this.loadMap(map_file);
 	},
 
 	initTexture: function(texture_file)
 	{
 		this.texture = this.loadMap(texture_file);
+		this.useTexture = 1.0;
 	},
 
 	loadMap: function(map_file)
@@ -356,10 +357,10 @@ var Geometria = Base.extend({
         gl.bindTexture(gl.TEXTURE_2D, this.normalMap);
         gl.uniform1i(glProgram.uNormalSampler, 1);
 
-        gl.activeTexture(gl.TEXTURE2);
-        gl.bindTexture(gl.TEXTURE_CUBE_MAP, this.reflexMap);
-        gl.uniform1i(glProgram.uCubeSampler, 2);
-		
+        /*gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_2D, this.reflexMap);
+        gl.uniform1i(glProgram.uReflectionSampler, 2);
+		*/
         var model_matrix_final = mat4.create();
 		mat4.multiply(model_matrix_final, m, this.model_matrix);
 		gl.uniformMatrix4fv(glProgram.ModelMatrixUniform, false, model_matrix_final); //le pasa al programa de vertices la matriz de modelado del objeto

@@ -16,6 +16,7 @@ var Paleta = Geometria.extend({
 		Geometria.prototype.initialize.call(this);
 	
 		this.useTexture = 0.0;
+		this.reflectiveness = 0.3;
 	
 	},
 
