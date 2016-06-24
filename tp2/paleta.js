@@ -5,7 +5,6 @@ Esta clase representa una superficie rectangular plana en el plano xy sin volume
 ****************************************/
 
 var Paleta = Geometria.extend({
-	//Se puede agregar función de escalado
 	initialize: function(largo,alto,cols,rows)
 	{
 		this.largo = largo;
@@ -15,12 +14,7 @@ var Paleta = Geometria.extend({
 		this.rows = rows;
 
 		Geometria.prototype.initialize.call(this);
-	/*
-		this.texture = gl.createTexture();
-		gl.bindTexture(gl.TEXTURE_2D, this.texture);
-		var whitePixel = new Uint8Array([255, 255, 255, 255]);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, whitePixel);
-	*/	
+	
 		this.useTexture = 0.0;
 	
 	},
@@ -73,8 +67,8 @@ var Paleta = Geometria.extend({
 				this.binormal_buffer.push(binormal[1]);
 				this.binormal_buffer.push(binormal[2]);
 
-				this.texture_coord_buffer.push(0.0);
-				this.texture_coord_buffer.push(0.0);
+				this.texture_coord_buffer.push(col/this.cols);
+				this.texture_coord_buffer.push(row/this.rows);
 			
 				puntoY += deltaY;
 			}

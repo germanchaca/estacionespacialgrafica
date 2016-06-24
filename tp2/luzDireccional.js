@@ -7,7 +7,7 @@ Guarda tambien la direccion de la luz en coordenadas de mundo
 var dir_index = 0;
 
 var LuzDireccional = Base.extend({
-	initialize: function(dir, iip, iia)
+	initialize: function(dir, iia, iip)
 	{
 	this.index = dir_index;
 	dir_index += 1;
@@ -20,13 +20,14 @@ var LuzDireccional = Base.extend({
 		dir = vec3.fromValues(0.0, 0.0, 1.0);
 	vec3.copy(this.dir, dir);
 	
+	if(iia === undefined)
+		iia = vec3.fromValues(1.0, 1.0, 1.0);
+	vec3.copy(this.ia, iia);
+
 	if(iip === undefined)
 		iip = vec3.fromValues(1.0, 1.0, 1.0);
 	vec3.copy(this.ip, iip);
 	
-	if(iia === undefined)
-		iia = vec3.fromValues(1.0, 1.0, 1.0);
-	vec3.copy(this.ia, iia);
 	},
 
 	render: function()

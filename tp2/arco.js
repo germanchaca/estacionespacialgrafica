@@ -41,6 +41,11 @@ var Arco = SupBarrido.extend({
 
 		SupBarrido.prototype.initialize.call(this, poligono, puntosRecorrido, basesRecorrido);
 		
+		this.useTexture = 1.0;
+		this.initTexture("maps/shiphull.jpg");
+		this.initNormalMap("maps/shiphull_normalmap.jpg");
+
+
 		var arcoInterno = new ArcoInterno(puntosRecorrido,basesRecorrido);
 		this.addDependencie(arcoInterno);
 
@@ -93,9 +98,6 @@ var Arco = SupBarrido.extend({
 			this.addDependencie(cilindro);
 		}
 
-		this.useTexture = 1.0;
-		this.initTexture("maps/shiphull.jpg");
-		this.initNormalMap("maps/shiphull_normalmap.jpg");
 
 		//this.useTexture = 0.0;
 	

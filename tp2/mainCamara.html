@@ -39,6 +39,7 @@
 <script type="text/javascript" src="Cable.js"></script>
 <script type="text/javascript" src="luzPuntual.js"></script>
 <script type="text/javascript" src="luzDireccional.js"></script>
+<script type="text/javascript" src="texturedSphere.js"></script>
 
 
 <script id="shader-posta-fs" type="x-shader/x-fragment">
@@ -59,6 +60,8 @@
 		uniform DirLight dirLights[2]; //luz del sol y de la tierra, direccionales
 		uniform float numLights;
 		
+
+
 		// material
 		uniform vec3 uViewPos;
 		uniform vec3 uColorSpecular;
@@ -82,14 +85,13 @@
 		
 		uniform sampler2D uSampler; //MAGIC
 		uniform sampler2D uNormalSampler;
-		uniform sampler2D uCubeSampler;
+		uniform samplerCube uCubeSampler;
 		//ver si hace falta un sampler para la reflexion 2D
 		
 		void main() {
 			
 			vec2 texCoord = vTextureCoord;
 			vec2 secTexCoord = vTextureCoord;
-			vec3 color = vColor;
 
 			
 			float mix_factor = 1.0;
@@ -101,7 +103,7 @@
 				vec3 binormal = normalize(vBinormal);
 			
 				mat3 tbn = mat3(tangent, binormal, normal);
-				normal = texture2D(uNormalSampler, texCoord).xyz;
+				normal = texture2D(uNormalSampler, texCoord).rgb;
 				normal = normalize((normal - vec3(0.5, 0.5, 0.5)) * 2.0); //lleva xyz cada valor entre -1 y 1
 			
 				//Transform the normal vector in the RGB channels to tangent space
@@ -109,32 +111,26 @@
 			}
 			
 			vec3 viewDir = normalize(vertPos - uViewPos);
-			
-			/*if(uHasTexture){
-				color = texture2D(uSampler, texCoord).rgb;
-				//colorea encima de la textura de determinado color
-				if(uBlendTexture){
-					color *= vColor;
-				}
-			}*/
 
-            //vec4 textureColor = texture2D(uSampler, vec2(texCoord.s, texCoord.t)) * uUseTexture;
-            //vec4 vertexColor = vColor * (1.0 - uUseTexture); 
-            //color = textureColor + vertexColor;
+            vec3 textureColor = texture2D(uSampler, texCoord).rgb * uUseTexture;
+            vec3 vertexColor = vColor * (1.0 - uUseTexture); 
+            vec3 color = textureColor + vertexColor;
+
             
-
-
-			//si no usa el modelo de Pong
-			if(!uUseLights){
+			//si no usa el modelo de Phong
+			if(!uUseLights)
+            {
 				gl_FragColor = vec4(color, 1.0);
 				return;
 			}
 			
-			//if (uUseReflection) {
-			//	vec3 lookup = reflect(viewDir, normal);
-			//	color = mix(color, vec3(textureCube(uCubeSampler, lookup)), uReflectiveness); //MIRAR
-			//}
-			
+			/*if (uUseReflection) 
+            {
+				vec3 lookup = reflect(viewDir, normal);
+				color = mix(color, vec3(textureCube(uCubeSampler, lookup)), uReflectiveness); //MIRAR
+			}
+			*/
+            
 			vec3 color_final = vec3(0.0, 0.0, 0.0);
 			
 			// dir lights
@@ -490,206 +486,6 @@
         return degrees * Math.PI / 180;
     }
 
-
-    function TexturedSphere(latitude_bands, longitude_bands){
-
-        this.latitudeBands = latitude_bands;
-        this.longitudeBands = longitude_bands;
-        
-        this.position_buffer = null;
-        this.normal_buffer = null;
-        this.texture_coord_buffer = null;
-        this.tangent_buffer = null;
-        this.binormal_buffer = null;
-        this.color_buffer = null;
-        this.index_buffer = null;
-
-        this.webgl_position_buffer = null;
-        this.webgl_normal_buffer = null;
-        this.webgl_texture_coord_buffer = null;
-        this.webgl_tangent_buffer = null;
-        this.webgl_binormal_buffer = null;
-        this.webgl_color_buffer = null;
-        this.webgl_index_buffer = null;
-        
-        this.texture = null;
-
-        this.initTexture = function(texture_file){
-            
-            var aux_texture = gl.createTexture();
-            this.texture = aux_texture;
-            this.texture.image = new Image();
-
-            this.texture.image.onload = function () {
-                   handleLoadedTexture()
-            }
-            this.texture.image.src = texture_file;
-        }
-
-
-        // Se generan los vertices para la esfera, calculando los datos para una esfera de radio 1
-        // Y también la información de las normales y coordenadas de textura para cada vertice de la esfera
-        // La esfera se renderizara utilizando triangulos, para ello se arma un buffer de índices 
-        // a todos los triángulos de la esfera
-        this.initBuffers = function(){
-
-            this.position_buffer = [];
-            this.normal_buffer = [];
-            this.texture_coord_buffer = [];
-            this.color_buffer = [];
-            this.tangent_buffer = [];
-            this.binormal_buffer = [];
-
-            var latNumber;
-            var longNumber;
-
-            for (latNumber=0; latNumber <= this.latitudeBands; latNumber++) {
-                var theta = latNumber * Math.PI / this.latitudeBands;
-                var sinTheta = Math.sin(theta);
-                var cosTheta = Math.cos(theta);
-
-                for (longNumber=0; longNumber <= this.longitudeBands; longNumber++) {
-                    var phi = longNumber * 2 * Math.PI / this.longitudeBands;
-                    var sinPhi = Math.sin(phi);
-                    var cosPhi = Math.cos(phi);
-
-                    var x = cosPhi * sinTheta;
-                    var y = cosTheta;
-                    var z = sinPhi * sinTheta;
-                    var u = 1.0 - (longNumber / this.longitudeBands);
-                    var v = 1.0 - (latNumber / this.latitudeBands);
-
-                    normal = vec3.fromValues(x,y,z);
-                    this.normal_buffer.push(x);
-                    this.normal_buffer.push(y);
-                    this.normal_buffer.push(z);
-
-                    tangente = vec3.fromValues(0,0,0); //CORREGIR
-                    this.tangent_buffer.push(tangente[0]);
-                    this.tangent_buffer.push(tangente[1]);
-                    this.tangent_buffer.push(tangente[2]);
-
-                    binormal = vec3.create();
-                    vec3.cross(binormal,tangente,normal);
-                    this.binormal_buffer.push(binormal[0]);
-                    this.binormal_buffer.push(binormal[1]);
-                    this.binormal_buffer.push(binormal[2]);
-
-                    this.texture_coord_buffer.push(u);
-                    this.texture_coord_buffer.push(v);
-
-                    this.position_buffer.push(x);
-                    this.position_buffer.push(y);
-                    this.position_buffer.push(z);
-                
-                    this.color_buffer.push(1.0);
-                    this.color_buffer.push(1.0);
-                    this.color_buffer.push(1.0);
-                }
-            }
-
-            // Buffer de indices de los triangulos
-            this.index_buffer = [];
-          
-            for (latNumber=0; latNumber < this.latitudeBands; latNumber++) {
-                for (longNumber=0; longNumber < this.longitudeBands; longNumber++) {
-                    var first = (latNumber * (this.longitudeBands + 1)) + longNumber;
-                    var second = first + this.longitudeBands + 1;
-                    this.index_buffer.push(first);
-                    this.index_buffer.push(second);
-                    this.index_buffer.push(first + 1);
-
-                    this.index_buffer.push(second);
-                    this.index_buffer.push(second + 1);
-                    this.index_buffer.push(first + 1);
-                }
-            }
-
-            // Creación e Inicialización de los buffers a nivel de OpenGL
-            this.webgl_normal_buffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_normal_buffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.normal_buffer), gl.STATIC_DRAW);
-            this.webgl_normal_buffer.itemSize = 3;
-            this.webgl_normal_buffer.numItems = this.normal_buffer.length / 3;
-
-            this.webgl_binormal_buffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_binormal_buffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.binormal_buffer), gl.STATIC_DRAW);
-            this.webgl_binormal_buffer.itemSize = 3;
-            this.webgl_binormal_buffer.numItems = this.binormal_buffer.length / 3;
-
-            this.webgl_tangent_buffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_tangent_buffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.tangent_buffer), gl.STATIC_DRAW);
-            this.webgl_tangent_buffer.itemSize = 3;
-            this.webgl_tangent_buffer.numItems = this.tangent_buffer.length / 3;
-
-            this.webgl_texture_coord_buffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_texture_coord_buffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.texture_coord_buffer), gl.STATIC_DRAW);
-            this.webgl_texture_coord_buffer.itemSize = 2;
-            this.webgl_texture_coord_buffer.numItems = this.texture_coord_buffer.length / 2;
-
-            this.webgl_color_buffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_color_buffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.color_buffer), gl.STATIC_DRAW);
-            this.webgl_color_buffer.itemSize = 3;
-            this.webgl_color_buffer.numItems = this.color_buffer.length / 3;
-
-            this.webgl_position_buffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_position_buffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.position_buffer), gl.STATIC_DRAW);
-            this.webgl_position_buffer.itemSize = 3;
-            this.webgl_position_buffer.numItems = this.position_buffer.length / 3;
-
-            this.webgl_index_buffer = gl.createBuffer();
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.webgl_index_buffer);
-            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.index_buffer), gl.STATIC_DRAW);
-            this.webgl_index_buffer.itemSize = 1;
-            this.webgl_index_buffer.numItems = this.index_buffer.length;
-        }
-
-        this.draw = function(modelMatrix){
-
-            // Se configuran los buffers que alimentarán el pipeline
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_position_buffer);
-            gl.vertexAttribPointer(glProgram.vertexPositionAttribute, this.webgl_position_buffer.itemSize, gl.FLOAT, false, 0, 0);
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_texture_coord_buffer);
-            gl.vertexAttribPointer(glProgram.textureCoordAttribute, this.webgl_texture_coord_buffer.itemSize, gl.FLOAT, false, 0, 0);
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_color_buffer);
-            gl.vertexAttribPointer(glProgram.vertexColorAttribute, this.webgl_color_buffer.itemSize, gl.FLOAT, false, 0, 0);
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_normal_buffer);
-            gl.vertexAttribPointer(glProgram.vertexNormalAttribute, this.webgl_normal_buffer.itemSize, gl.FLOAT, false, 0, 0);
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_binormal_buffer);
-            gl.vertexAttribPointer(glProgram.vertexBinormalAttribute, this.webgl_binormal_buffer.itemSize, gl.FLOAT, false, 0, 0);
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_tangent_buffer);
-            gl.vertexAttribPointer(glProgram.vertexTangentAttribute, this.webgl_tangent_buffer.itemSize, gl.FLOAT, false, 0, 0);
-
-            gl.activeTexture(gl.TEXTURE0);
-            gl.bindTexture(gl.TEXTURE_2D, this.texture);
-            gl.uniform1i(glProgram.samplerUniform, 0);
-
-            gl.uniformMatrix4fv(glProgram.ModelMatrixUniform, false, modelMatrix);
-            
-            var normalMatrix = mat4.create();
-            mat4.invert(normalMatrix, normalMatrix);
-            mat4.transpose(normalMatrix, normalMatrix);
-            gl.uniformMatrix4fv(glProgram.nMatrixUniform, false, normalMatrix);
-
-            gl.bindTexture(gl.TEXTURE_2D, this.texture);
-            
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.webgl_index_buffer);
-            //gl.drawElements(gl.LINE_LOOP, this.webgl_index_buffer.numItems, gl.UNSIGNED_SHORT, 0);
-            gl.drawElements(gl.TRIANGLES, this.webgl_index_buffer.numItems, gl.UNSIGNED_SHORT, 0);
-            /////////////////////////////////
-        }
-        
-    }
 
     function handleMouseDown(event) {
             mouseDown = true;
@@ -1147,15 +943,12 @@
 
 
         deimos = new TexturedSphere(64, 64);
-        deimos.initBuffers();
         deimos.initTexture("earthh.jpg");
 
         mars = new TexturedSphere(64,64);
-        mars.initBuffers();
         mars.initTexture("sun.jpg");
 
         phobos = new TexturedSphere(64, 64);
-        phobos.initBuffers();
         phobos.initTexture("moon.gif");
 
         

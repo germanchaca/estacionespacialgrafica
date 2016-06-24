@@ -37,10 +37,157 @@
 <script type="text/javascript" src="brazo.js"></script>
 <script type="text/javascript" src="turbina.js"></script>
 <script type="text/javascript" src="Cable.js"></script>
+<script type="text/javascript" src="luzPuntual.js"></script>
+<script type="text/javascript" src="luzDireccional.js"></script>
+<script type="text/javascript" src="texturedSphere.js"></script>
 
 
+<script id="shader-posta-fs" type="x-shader/x-fragment">
+        precision mediump float;
 
+		// luces
+		struct PointLight {
+			vec3 position;
+			vec3 ambient;
+			vec3 intensity;
+		};
+		struct DirLight {
+			vec3 direction;
+			vec3 ambient;
+			vec3 intensity;
+		};
+		//uniform PointLight pointLights[4]; //5 lces puntuales dentro del angar
+		uniform DirLight dirLights[2]; //luz del sol y de la tierra, direccionales
+		uniform float numLights;
+		
+        //uniform vec3 uAmbientColor;
 
+		// material
+		uniform vec3 uViewPos;
+		uniform vec3 uColorSpecular;
+		uniform float uKa;
+		uniform float uKd;
+		uniform float uKs;
+		uniform float uShininess;
+		uniform float uReflectiveness;
+		uniform float uUseTexture;
+		uniform bool uUseLights;
+		
+		uniform bool uUseNormalMap;
+		uniform bool uUseReflection;
+		
+		varying vec3 vColor;
+		varying vec3 vNormal;
+		varying vec3 vTangente;
+		varying vec3 vBinormal;
+		varying vec3 vertPos;
+		varying vec2 vTextureCoord;
+		
+		uniform sampler2D uSampler; //MAGIC
+		uniform sampler2D uNormalSampler;
+		uniform samplerCube uCubeSampler;
+		//ver si hace falta un sampler para la reflexion 2D
+		
+		void main() {
+			
+			vec2 texCoord = vTextureCoord;
+			
+			vec3 normal = normalize(vNormal);	
+			
+			if (uUseNormalMap){
+				vec3 tangent = normalize(vTangente);
+				vec3 binormal = normalize(vBinormal);
+			
+				mat3 tbn = mat3(tangent, binormal, normal);
+				normal = texture2D(uNormalSampler, texCoord).rgb;
+				normal = normalize((normal - vec3(0.5, 0.5, 0.5)) * 2.0); //lleva xyz cada valor entre -1 y 1
+			
+				//Transform the normal vector in the RGB channels to tangent space
+				normal = normalize(tbn * normal);
+			}
+
+            vec3 textureColor = texture2D(uSampler, texCoord).rgb * uUseTexture;
+            vec3 vertexColor = vColor * (1.0 - uUseTexture); 
+            vec3 color = textureColor + vertexColor;
+			
+            //si no usa el modelo de Phong
+            if(!uUseLights)
+            {
+                gl_FragColor = vec4(color, 1.0);
+                return;
+            }
+            
+            vec3 viewDir = normalize(vertPos - uViewPos);
+
+            if (uUseReflection) 
+            {
+				vec3 lookup = reflect(viewDir, normal);
+				color = mix(color, vec3(textureCube(uCubeSampler, lookup)), uReflectiveness); //MIRAR
+			}
+			 
+			
+            vec3 color_final =vec3(0.0,0.0,0.0);
+
+			// dir lights
+            for(int i = 0; i < 2; ++i){
+            
+                // cosas que dependen de cada luz
+                vec3 Ia = dirLights[i].ambient; // luz ambiente (cada luz contribuye a esto)
+                vec3 Ip = dirLights[i].intensity; // intensidad de la luz ficticia
+                vec3 lightDir = normalize(dirLights[i].direction); //direccion de la luz
+                
+                vec3 reflectDir = reflect(lightDir, normal);
+                // esto es para el factor de atenuacion segun la distancia al observador
+                // constantes (de 0 a 1)
+                /*float c1 = 0.0;
+                float c2 = 0.02;
+                float c3 = 0.0;
+                float dist_to_light = 9.0; //OJO
+                float fatt = min(1.0 / (c1 + c2*dist_to_light + c3*pow(dist_to_light, 2.0)), 1.0);*/          
+                float lambertian = max(dot(lightDir,normal), 0.0);
+                float specular = 0.0;
+                if(lambertian > 0.0) {
+                   float specAngle = max(dot(reflectDir, viewDir), 0.0);
+                   specular = pow(specAngle, uShininess);
+                }
+
+                color_final += Ia * color  * uKa + (Ip) * (color * uKd * lambertian + uColorSpecular * uKs * specular);
+            }
+
+        /*    // point lights
+			for(int i = 0; i < 5; ++i){
+			
+				// cosas que dependen de cada luz
+				vec3 Ia = pointLights[i].ambient; // luz ambiente (cada luz contribuye a esto)
+				vec3 lightPos = pointLights[i].position;
+				vec3 Ip = pointLights[i].intensity; // intensidad de la luz ficticia
+				
+				vec3 lightDir = normalize(lightPos - vertPos);
+				vec3 reflectDir = reflect(lightDir, normal);
+				// esto es para el factor de atenuacion segun la distancia al observador
+				// constantes (de 0 a 1)
+				float c1 = 0.0;
+				float c2 = 0.02;
+				float c3 = 0.0;
+				float dist_to_light = length(lightPos - vertPos);
+				float fatt = min(1.0 / (c1 + c2*dist_to_light + c3*pow(dist_to_light, 2.0)), 1.0);			
+				float lambertian = max(abs(dot(lightDir,normal)), 0.0);
+				float specular = 0.0;
+				if(lambertian > 0.0) {
+				   float specAngle = max(dot(reflectDir, viewDir), 0.0);
+				   specular = pow(specAngle, uShininess);
+				}
+				
+				color_final += Ia * color * uKa + 
+									(Ip ) * fatt * (color * uKd * lambertian + 
+												uColorSpecular * uKs * specular);
+			}
+		*/			
+			gl_FragColor = vec4(color_final, 1.0);
+			
+		}
+
+</script>
 
 
 <script id="shader-fs" type="x-shader/x-fragment">
@@ -66,51 +213,38 @@
     attribute vec3 aVertexNormal;
     attribute vec2 aTextureCoord;
     attribute vec3 aVertexColor;
+    attribute vec3 aVertexTangent;
+    attribute vec3 aVertexBinormal;
 
     uniform mat4 uViewMatrix;
     uniform mat4 uModelMatrix;
     uniform mat4 uPMatrix;
-    uniform mat3 uNMatrix;
+    uniform mat4 uNMatrix;
 
     uniform vec3 uAmbientColor;
 
     uniform vec3 uLightPosition;
     uniform vec3 uDirectionalColor;
 
-    uniform bool uUseLighting;
+    uniform bool uUseLights;
 
-    varying vec4 vColor;
+    //varying vec3 vLightWeighting;
+    varying vec3 vColor;
+    varying vec3 vNormal;
+    varying vec3 vTangente;
+    varying vec3 vBinormal;
+    varying vec3 vertPos;
     varying vec2 vTextureCoord;
-    varying vec3 vLightWeighting;
 
     void main(void) {
     
-        // Transformamos al vértice al espacio de la cámara
-        vec4 pos_camera_view = uViewMatrix * uModelMatrix * vec4(aVertexPosition, 1.0);
-        
-        // Transformamos al vértice al espacio de la proyección
-        gl_Position = uPMatrix * pos_camera_view;
-        
-        // Coordenada de textura sin modifiaciones
+        gl_Position = uPMatrix * uViewMatrix * uModelMatrix * vec4(aVertexPosition, 1.0);
+        vertPos = vec3(uModelMatrix * vec4(aVertexPosition, 1.0));
+        vColor = aVertexColor;
+        vNormal = normalize(vec3(uNMatrix * vec4(normalize(aVertexNormal), 0.0)));
+        vBinormal = normalize(vec3(uNMatrix * vec4(normalize(aVertexBinormal), 0.0)));
+        vTangente = normalize(vec3(uNMatrix * vec4(normalize(aVertexTangent), 0.0)));
         vTextureCoord = aTextureCoord;
-
-        //Color
-        vColor = vec4(aVertexColor,1.0);
-                            
-        ////////////////////////////////////////////
-        // Calculos de la iluminación
-        vec3 light_dir =  uLightPosition - vec3( pos_camera_view );
-        normalize(light_dir);
-        if (!uUseLighting) 
-        {
-            vLightWeighting = vec3(1.0, 1.0, 1.0);
-        }
-        else 
-        {
-            vec3 transformedNormal = normalize(uNMatrix * aVertexNormal);
-            float directionalLightWeighting = max(dot(transformedNormal, light_dir), 0.0);
-            vLightWeighting = uAmbientColor + uDirectionalColor * directionalLightWeighting;
-        }
         ////////////////////////////////////////////
     }
 </script>
@@ -173,7 +307,7 @@
 
 
        function initShaders() {
-        var fragmentShader = getShader(gl, "shader-fs");
+        var fragmentShader = getShader(gl, "shader-posta-fs");
         var vertexShader = getShader(gl, "shader-vs");
 
         glProgram = gl.createProgram();
@@ -199,16 +333,75 @@
         glProgram.vertexNormalAttribute = gl.getAttribLocation(glProgram, "aVertexNormal");
         gl.enableVertexAttribArray(glProgram.vertexNormalAttribute);
 
+        glProgram.vertexBinormalAttribute = gl.getAttribLocation(glProgram, "aVertexBinormal");
+        gl.enableVertexAttribArray(glProgram.vertexBinormalAttribute);
+
+        glProgram.vertexTangentAttribute = gl.getAttribLocation(glProgram, "aVertexTangent");
+        gl.enableVertexAttribArray(glProgram.vertexTangentAttribute);
+
         glProgram.pMatrixUniform = gl.getUniformLocation(glProgram, "uPMatrix");
         glProgram.ViewMatrixUniform = gl.getUniformLocation(glProgram, "uViewMatrix");
         glProgram.ModelMatrixUniform = gl.getUniformLocation(glProgram, "uModelMatrix");
         glProgram.nMatrixUniform = gl.getUniformLocation(glProgram, "uNMatrix");
-        glProgram.samplerUniform = gl.getUniformLocation(glProgram, "uSampler");
         glProgram.useLightingUniform = gl.getUniformLocation(glProgram, "uUseLighting");
         glProgram.ambientColorUniform = gl.getUniformLocation(glProgram, "uAmbientColor");
         glProgram.lightingDirectionUniform = gl.getUniformLocation(glProgram, "uLightPosition");
         glProgram.directionalColorUniform = gl.getUniformLocation(glProgram, "uDirectionalColor");
         glProgram.UseTexture = gl.getUniformLocation(glProgram, "uUseTexture");
+    
+
+        glProgram.dirLights = new Array;
+        for(var i = 0; i < 2; ++i){
+            var light = new Array;
+            light.push(gl.getUniformLocation(glProgram, "dirLights[" + i + "]." + "direction"));
+            light.push(gl.getUniformLocation(glProgram, "dirLights[" + i + "]." + "ambient"));
+            light.push(gl.getUniformLocation(glProgram, "dirLights[" + i + "]." + "intensity"));
+            glProgram.dirLights.push(light);
+        }
+            
+       /* glProgram.pointLights = new Array;
+        for(var i = 0; i < 6; ++i){
+            var light = new Array;
+            light.push(gl.getUniformLocation(glProgram, "pointLights[" + i + "]." + "position"));
+            light.push(gl.getUniformLocation(glProgram, "pointLights[" + i + "]." + "ambient"));
+            light.push(gl.getUniformLocation(glProgram, "pointLights[" + i + "]." + "intensity"));
+            glProgram.pointLights.push(light);
+        }
+    */
+        glProgram.numLights = gl.getUniformLocation(glProgram, "numLights");
+        
+        glProgram.uViewPos = gl.getUniformLocation(glProgram, "uViewPos");
+        glProgram.uColorSpecular = gl.getUniformLocation(glProgram, "uColorSpecular");
+        glProgram.uKa = gl.getUniformLocation(glProgram, "uKa");
+        glProgram.uKd = gl.getUniformLocation(glProgram, "uKd");
+        glProgram.uKs = gl.getUniformLocation(glProgram, "uKs");
+        glProgram.uShininess = gl.getUniformLocation(glProgram, "uShininess");
+        glProgram.uReflectiveness = gl.getUniformLocation(glProgram, "uReflectiveness");
+        
+
+        glProgram.uUseNormalMap = gl.getUniformLocation(glProgram, "uUseNormalMap");
+        gl.uniform1i(glProgram.uUseNormalMap, 0);
+        glProgram.uUseReflection = gl.getUniformLocation(glProgram, "uUseReflection");
+        gl.uniform1i(glProgram.uUseReflection, 0);
+        glProgram.uUseLights = gl.getUniformLocation(glProgram, "uUseLights");
+        gl.uniform1i(glProgram.uUseLights, 0);
+        
+        glProgram.uSampler = gl.getUniformLocation(glProgram, "uSampler");
+        gl.uniform1i(glProgram.uSampler, 0);
+        glProgram.uNormalSampler = gl.getUniformLocation(glProgram, "uNormalSampler");
+        gl.uniform1i(glProgram.uNormalSampler, 1);
+        glProgram.uCubeSampler = gl.getUniformLocation(glProgram, "uCubeSampler");
+        gl.uniform1i(glProgram.uCubeSampler, 2);
+        //glProgram.uHeightSampler = gl.getUniformLocation(glProgram, "uHeightSampler");
+        //gl.uniform1i(glProgram.uHeightSampler, 3);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.activeTexture(gl.TEXTURE2);
+        gl.bindTexture(gl.TEXTURE_CUBE_MAP, null);
+        gl.activeTexture(gl.TEXTURE3);
+        gl.bindTexture(gl.TEXTURE_2D, null);
     }
 
 
@@ -250,6 +443,11 @@
     var lastMouseX = null;
     var lastMouseY = null;
 
+    var puntoOjo = null;
+    var puntoMirado = null;
+    var vecArriba = null;
+    var camara = 1;
+
     var deimos = null;
     var mars = null;
     var phobos = null;
@@ -284,186 +482,175 @@
     }
 
 
-    function TexturedSphere(latitude_bands, longitude_bands){
+    function handleMouseDown(event) {
+            mouseDown = true;
+            lastMouseX = event.clientX;
+            lastMouseY = event.clientY;
+    }
 
-        this.latitudeBands = latitude_bands;
-        this.longitudeBands = longitude_bands;
+    function handleMouseUp(event) {
+        mouseDown = false;
+    }
+
+    function handleMouseMove(event) {
+        if(camara == 1){
+
+            if (!mouseDown) {
+              return;
+            }
+            var newX = event.clientX;
+            var newY = event.clientY;
+
+            var deltaX = newX - lastMouseX;
+            var deltaY = newY - lastMouseY;
+            var deltaP = vec3.create();
         
-        this.position_buffer = null;
-        this.normal_buffer = null;
-        this.texture_coord_buffer = null;
-        this.color_buffer = null;
-        this.index_buffer = null;
+            vec3.subtract(deltaP, puntoOjo, puntoMirado);
 
-        this.webgl_position_buffer = null;
-        this.webgl_normal_buffer = null;
-        this.webgl_texture_coord_buffer = null;
-        this.webgl_color_buffer = null;
-        this.webgl_index_buffer = null;
-        
-        this.texture = null;
-
-        this.initTexture = function(texture_file){
+            var matR = mat4.create();
             
-            var aux_texture = gl.createTexture();
-            this.texture = aux_texture;
-            this.texture.image = new Image();
+            mat4.identity(matR);
+            mat4.rotate(matR, matR, -deltaX/100, vecArriba);
+            var ejeDeRotacion = vec3.create();
+            vec3.cross(ejeDeRotacion, vecArriba, deltaP);
+            mat4.rotate(matR, matR, -deltaY/100, ejeDeRotacion);
+            vec3.transformMat4(deltaP, deltaP, matR);
+            vec3.transformMat4(vecArriba, vecArriba, matR);
+            vec3.add(puntoOjo, deltaP, puntoMirado);
 
-            this.texture.image.onload = function () {
-                   handleLoadedTexture()
-            }
-            this.texture.image.src = texture_file;
+
+            lastMouseX = newX;
+            lastMouseY = newY;
         }
+        //CAMBIA PUNTO MIRADO ESTACION ESPACIAL
+        if(camara == 2){
+            var newX = event.clientX;
+            var newY = event.clientY;
 
-
-        // Se generan los vertices para la esfera, calculando los datos para una esfera de radio 1
-        // Y también la información de las normales y coordenadas de textura para cada vertice de la esfera
-        // La esfera se renderizara utilizando triangulos, para ello se arma un buffer de índices 
-        // a todos los triángulos de la esfera
-        this.initBuffers = function(){
-
-            this.position_buffer = [];
-            this.normal_buffer = [];
-            this.texture_coord_buffer = [];
-            this.color_buffer = [];
-
-            var latNumber;
-            var longNumber;
-
-            for (latNumber=0; latNumber <= this.latitudeBands; latNumber++) {
-                var theta = latNumber * Math.PI / this.latitudeBands;
-                var sinTheta = Math.sin(theta);
-                var cosTheta = Math.cos(theta);
-
-                for (longNumber=0; longNumber <= this.longitudeBands; longNumber++) {
-                    var phi = longNumber * 2 * Math.PI / this.longitudeBands;
-                    var sinPhi = Math.sin(phi);
-                    var cosPhi = Math.cos(phi);
-
-                    var x = cosPhi * sinTheta;
-                    var y = cosTheta;
-                    var z = sinPhi * sinTheta;
-                    var u = 1.0 - (longNumber / this.longitudeBands);
-                    var v = 1.0 - (latNumber / this.latitudeBands);
-
-                    this.normal_buffer.push(x);
-                    this.normal_buffer.push(y);
-                    this.normal_buffer.push(z);
-
-                    this.texture_coord_buffer.push(u);
-                    this.texture_coord_buffer.push(v);
-
-                    this.position_buffer.push(x);
-                    this.position_buffer.push(y);
-                    this.position_buffer.push(z);
-                
-                    this.color_buffer.push(1.0);
-                    this.color_buffer.push(1.0);
-                    this.color_buffer.push(1.0);
-                }
-            }
-
-            // Buffer de indices de los triangulos
-            this.index_buffer = [];
-          
-            for (latNumber=0; latNumber < this.latitudeBands; latNumber++) {
-                for (longNumber=0; longNumber < this.longitudeBands; longNumber++) {
-                    var first = (latNumber * (this.longitudeBands + 1)) + longNumber;
-                    var second = first + this.longitudeBands + 1;
-                    this.index_buffer.push(first);
-                    this.index_buffer.push(second);
-                    this.index_buffer.push(first + 1);
-
-                    this.index_buffer.push(second);
-                    this.index_buffer.push(second + 1);
-                    this.index_buffer.push(first + 1);
-                }
-            }
-
-            // Creación e Inicialización de los buffers a nivel de OpenGL
-            this.webgl_normal_buffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_normal_buffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.normal_buffer), gl.STATIC_DRAW);
-            this.webgl_normal_buffer.itemSize = 3;
-            this.webgl_normal_buffer.numItems = this.normal_buffer.length / 3;
-
-            this.webgl_texture_coord_buffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_texture_coord_buffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.texture_coord_buffer), gl.STATIC_DRAW);
-            this.webgl_texture_coord_buffer.itemSize = 2;
-            this.webgl_texture_coord_buffer.numItems = this.texture_coord_buffer.length / 2;
-
-            this.webgl_color_buffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_color_buffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.color_buffer), gl.STATIC_DRAW);
-            this.webgl_color_buffer.itemSize = 3;
-            this.webgl_color_buffer.numItems = this.color_buffer.length / 3;
-
-            this.webgl_position_buffer = gl.createBuffer();
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_position_buffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.position_buffer), gl.STATIC_DRAW);
-            this.webgl_position_buffer.itemSize = 3;
-            this.webgl_position_buffer.numItems = this.position_buffer.length / 3;
-
-            this.webgl_index_buffer = gl.createBuffer();
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.webgl_index_buffer);
-            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(this.index_buffer), gl.STATIC_DRAW);
-            this.webgl_index_buffer.itemSize = 1;
-            this.webgl_index_buffer.numItems = this.index_buffer.length;
-        }
-
-        this.draw = function(modelMatrix){
-
-            // Se configuran los buffers que alimentarán el pipeline
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_position_buffer);
-            gl.vertexAttribPointer(glProgram.vertexPositionAttribute, this.webgl_position_buffer.itemSize, gl.FLOAT, false, 0, 0);
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_texture_coord_buffer);
-            gl.vertexAttribPointer(glProgram.textureCoordAttribute, this.webgl_texture_coord_buffer.itemSize, gl.FLOAT, false, 0, 0);
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_color_buffer);
-            gl.vertexAttribPointer(glProgram.vertexColorAttribute, this.webgl_color_buffer.itemSize, gl.FLOAT, false, 0, 0);
-
-            gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_normal_buffer);
-            gl.vertexAttribPointer(glProgram.vertexNormalAttribute, this.webgl_normal_buffer.itemSize, gl.FLOAT, false, 0, 0);
-
-            gl.activeTexture(gl.TEXTURE0);
-            gl.bindTexture(gl.TEXTURE_2D, this.texture);
-            gl.uniform1i(glProgram.samplerUniform, 0);
-
-            gl.uniformMatrix4fv(glProgram.ModelMatrixUniform, false, modelMatrix);
-            var normalMatrix = mat3.create();
-            mat3.fromMat4(normalMatrix, modelMatrix);
-            mat3.invert(normalMatrix, normalMatrix);
-            mat3.transpose(normalMatrix, normalMatrix);
-            gl.uniformMatrix3fv(glProgram.nMatrixUniform, false, normalMatrix);
-
-            gl.bindTexture(gl.TEXTURE_2D, this.texture);
+            var deltaX = newX - lastMouseX;
+            var deltaY = newY - lastMouseY;
+            var deltaP = vec3.create();
+        
+            vec3.subtract(deltaP, puntoMirado, puntoOjo);
+            var matR = mat4.create();
             
-            gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.webgl_index_buffer);
-            //gl.drawElements(gl.LINE_LOOP, this.webgl_index_buffer.numItems, gl.UNSIGNED_SHORT, 0);
-            gl.drawElements(gl.TRIANGLES, this.webgl_index_buffer.numItems, gl.UNSIGNED_SHORT, 0);
-            /////////////////////////////////
+            mat4.identity(matR);
+            mat4.rotate(matR, matR, -deltaX/500, vecArriba);
+            var ejeDeRotacion = vec3.create();
+            vec3.cross(ejeDeRotacion, vecArriba, deltaP);
+            mat4.rotate(matR, matR, deltaY/500, ejeDeRotacion);
+            vec3.transformMat4(deltaP, deltaP, matR);
+            vec3.transformMat4(vecArriba, vecArriba, matR);
+            vecArriba = vec3.fromValues(0,1,0);
+            vec3.add(puntoMirado, deltaP, puntoOjo);
+
+
+            lastMouseX = newX;
+            lastMouseY = newY;
         }
         
+        updateView();
+    }
+    
+    function handleMouseWheel(event){
+        var delta;
+
+        if (event.wheelDelta){
+            delta = event.wheelDelta/-120;
+        } else if (event.detail){
+            delta = event.detail;
+        }
+        var deltaP = vec3.create();
+
+        vec3.subtract(deltaP, puntoOjo, puntoMirado);
+
+        vec3.scale(deltaP, deltaP, delta/10+1);
+        vec3.add(puntoOjo, puntoMirado, deltaP);
+        updateView();
+    }
+
+    function handleKeyDown(event){
+        if (String.fromCharCode(event.keyCode) == "C") {
+            camara = (camara + 1) % 4;
+            if (camara == 1){
+
+                puntoOjo = vec3.fromValues(30,65,-90);
+                puntoMirado = vec3.fromValues(0,0,0);
+                vecArriba = vec3.fromValues(0,1,0);
+                updateView();
+            }
+            if (camara == 2){
+                puntoOjo = vec3.fromValues(10,0,-30);
+                puntoMirado = vec3.fromValues(10,0,0);
+                vecArriba = vec3.fromValues(0,1,0);
+                updateView();
+            }
+            if (camara == 3){
+                puntoOjo = vec3.fromValues(10,0,-7);
+                puntoMirado = vec3.fromValues(7,0,-10);
+                vecArriba = vec3.fromValues(0,1,0);
+                updateView();   
+            }
+        }
+        if(camara == 2){
+            //Camara Bahia
+            var deltaP = vec3.create();
+            vec3.subtract(deltaP, puntoOjo, puntoMirado);
+            vec3.normalize(deltaP, deltaP);
+            if (String.fromCharCode(event.keyCode) == "W") {
+                vec3.subtract(puntoOjo, puntoOjo, deltaP);
+                vec3.subtract(puntoMirado, puntoMirado, deltaP);
+            }
+            if (String.fromCharCode(event.keyCode) == "A") {
+                vec3.cross(deltaP, deltaP, vecArriba);
+                vec3.add(puntoOjo, puntoOjo, deltaP);
+                vec3.add(puntoMirado, puntoMirado, deltaP);
+            }
+            if (String.fromCharCode(event.keyCode) == "S") {
+                vec3.add(puntoOjo, puntoOjo, deltaP);
+                vec3.add(puntoMirado, puntoMirado, deltaP);
+            }
+            if (String.fromCharCode(event.keyCode) == "D") {
+                vec3.cross(deltaP, deltaP, vecArriba);
+                vec3.subtract(puntoOjo, puntoOjo, deltaP);
+                vec3.subtract(puntoMirado, puntoMirado, deltaP);
+            }
+        /*    if(String.fromCharCode(event.keyCode) == "Z"){
+                vec3.add(puntoOjo, puntoOjo, vec3.fromValues(0,1,0));
+            }
+            if(String.fromCharCode(event.keyCode) == "X"){
+                vec3.subtract(puntoOjo, puntoOjo, vec3.fromValues(0,1,0));
+            }
+        */
+        }
+        
+        updateView();
+    }
+    
+    function updateView(){
+        // Preparamos una matriz de vista.
+        var u_view_matrix = gl.getUniformLocation(glProgram, "uViewMatrix");
+        mat4.identity(CameraMatrix);
+        mat4.lookAt(CameraMatrix, puntoOjo, puntoMirado, vecArriba);
+        gl.uniformMatrix4fv(u_view_matrix, false, CameraMatrix);
     }
 
 
     function drawScene() {
     
-        // Se configura el vierport dentro de área ¨canvas¨. en este caso se utiliza toda 
-        // el área disponible
+        // Se configura el vierport dentro de Ã¡rea Â¨canvasÂ¨. en este caso se utiliza toda 
+        // el Ã¡rea disponible
         gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
         
         // Se habilita el color de borrado para la pantalla (Color Buffer) y otros buffers
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-        // Se configura la matriz de proyección
+        // Se configura la matriz de proyecciÃ³n
         mat4.perspective(pMatrix, 3.14/12.0, gl.viewportWidth / gl.viewportHeight, 0.1, 1000.0);
 
         /////////////////////////////////////////////////////
-        // Configuración de la luz
-        // Se inicializan las variables asociadas con la Iluminación
+        // ConfiguraciÃ³n de la luz
+        // Se inicializan las variables asociadas con la IluminaciÃ³n
         var lighting;
         lighting = true;
         gl.uniform1i(glProgram.useLightingUniform, lighting);       
@@ -471,10 +658,60 @@
         //vec3.transformMat4(lightPosition, lightPosition, CameraMatrix);
         gl.uniform3fv(glProgram.lightingDirectionUniform, lightPosition);           
         
+        
+        //luces direccionales
+
+        
+        
+        luzSol.render();
+
+
+        luzTierra.render();
+            
+        // luces puntuales
+        /*var ip_night = 0.25;
+        var ia_night = 0.05;
+        light_noche1 = new PointLight(vec3.fromValues(-20.0, -10.0, 5.0), 
+                                    vec3.fromValues(ip_night, ip_night, ip_night), 
+                                    vec3.fromValues(ia_night, ia_night, ia_night));
+        escena.addLight(light_noche1);
+        light_noche1.turnOff();
+                                    
+        light_noche2 = new PointLight(vec3.fromValues(20.0, -10.0, -10.0), 
+                                    vec3.fromValues(ip_night, ip_night, ip_night), 
+                                    vec3.fromValues(ia_night, ia_night, ia_night));
+        escena.addLight(light_noche2);
+        light_noche2.turnOff();
+        
+        light_noche3 = new PointLight(vec3.fromValues(30.0, -10.0, 40.0), 
+                                    vec3.fromValues(ip_night, ip_night, ip_night), 
+                                    vec3.fromValues(ia_night, ia_night, ia_night));
+        escena.addLight(light_noche3);
+        light_noche3.turnOff();
+                                    
+        light_noche4 = new PointLight(vec3.fromValues(40.0, -12.0, -20.0), 
+                                    vec3.fromValues(ip_night, ip_night, ip_night), 
+                                    vec3.fromValues(ia_night, ia_night, ia_night));
+        escena.addLight(light_noche4);
+        light_noche4.turnOff();
+        
+        light_noche5 = new PointLight(vec3.fromValues(-20.0, -10.0, -20.0), 
+                                    vec3.fromValues(ip_night, ip_night, ip_night), 
+                                    vec3.fromValues(ia_night, ia_night, ia_night));
+        escena.addLight(light_noche5);
+        light_noche5.turnOff();
+        
+        light_noche6 = new PointLight(vec3.fromValues(-35.0, -10.0, 35.0), 
+                                    vec3.fromValues(ip_night, ip_night, ip_night), 
+                                    vec3.fromValues(ia_night, ia_night, ia_night));
+        escena.addLight(light_noche6);
+
+*/
+
         /////////////////////////////////////////////////////
-        // Definimos la ubicación de la camara
-        // Pensamos por el momento marsamente la posición de la cámara, la cual siempre mira al mars.
-        var matriz_camara = mat4.create();
+        // Definimos la ubicaciÃ³n de la camara
+        // Pensamos por el momento marsamente la posiciÃ³n de la cÃ¡mara, la cual siempre mira al mars.
+      /*  var matriz_camara = mat4.create();
         mat4.identity(matriz_camara);
         //mat4.identity(CameraMatrix);
         //mat4.translate(CameraMatrix, CameraMatrix, [0, 0, -60]);
@@ -487,18 +724,18 @@
 
         mat4.lookAt(CameraMatrix, eye_point, at_point, up_point);
         mat4.multiply(CameraMatrix, CameraMatrix, matriz_camara);
-        
+       */ 
         setViewProjectionMatrix();
 
-        gl.uniform1f(glProgram.UseTexture, 1.0);
+        //gl.uniform1f(glProgram.UseTexture, 1.0);
 
         ///////////////////////////////////////////////////////
         //
-        // Dibujamos la Tierra
+  /*      // Dibujamos la Tierra
 
-        // Configuramos la iluminación para la Tierra
+        // Configuramos la iluminaciÃ³n para la Tierra
         gl.uniform3f(glProgram.ambientColorUniform, 0.2, 0.2, 0.2 );
-        gl.uniform3f(glProgram.directionalColorUniform, 0.05, 0.05, 0.05);
+        gl.uniform3f(glProgram.directionalColorUniform, 0.02, 0.02, 0.02);
         
         // Matriz de modelado de la Tierra
         var model_matrix_deimos = mat4.create();
@@ -507,7 +744,7 @@
         mat4.identity(translate_deimos);
         mat4.translate(translate_deimos, translate_deimos, [30, -30, 0 ]);
 
-        // Matriz de rotación del eje sobre el plano de la eclíptica a 23 grados
+        // Matriz de rotaciÃ³n del eje sobre el plano de la eclÃ­ptica a 23 grados
         var axis_inclination_matrix = mat4.create();
         mat4.identity(axis_inclination_matrix);
         mat4.rotate(axis_inclination_matrix, axis_inclination_matrix, -0.4014, [0, 0, 1]);
@@ -522,16 +759,16 @@
         mat4.rotate(inverse_translation_movement, inverse_translation_movement, -deimosRotationAnglemars, [0, 1, 0]);
 
         // Las transformaciones aplicadas a la Tierra son:
-        // (el órden es el inverso al de las llamadas a la función multiply)
+        // (el Ã³rden es el inverso al de las llamadas a la funciÃ³n multiply)
         //
-        // 1. Se aplica el movimiento de rotación de la Tierra
-        // 2. Se inclina el eje de rotación 23 grados
-        // 3. Se aplica la inversa del ángulo de rotación del movimiento alrededor del Sol
-        //    con el fin de luego compensar dicha rotación y mantener el Eje de la Tierra siempre 
-        //    en la misma orientación
-        // 4. A partir de acá se aplican las dos transformaciones que son comunes con la Tierra
-        //          4.1 La traslación para poner al sistema Tierra-Luna en orbita alrededor del Sol
-        //          4.2 La rotación para poner al sistema Tierra-Luna a girar en torno al Sol.
+        // 1. Se aplica el movimiento de rotaciÃ³n de la Tierra
+        // 2. Se inclina el eje de rotaciÃ³n 23 grados
+        // 3. Se aplica la inversa del Ã¡ngulo de rotaciÃ³n del movimiento alrededor del Sol
+        //    con el fin de luego compensar dicha rotaciÃ³n y mantener el Eje de la Tierra siempre 
+        //    en la misma orientaciÃ³n
+        // 4. A partir de acÃ¡ se aplican las dos transformaciones que son comunes con la Tierra
+        //          4.1 La traslaciÃ³n para poner al sistema Tierra-Luna en orbita alrededor del Sol
+        //          4.2 La rotaciÃ³n para poner al sistema Tierra-Luna a girar en torno al Sol.
         
         //mat4.multiply(model_matrix_deimos, model_matrix_deimos, translation_movement);
         mat4.multiply(model_matrix_deimos, model_matrix_deimos, translate_deimos);
@@ -548,12 +785,12 @@
         deimos.draw(model_matrix_deimos);
         //
         ////////////////////////////////////////////////////////
-
+*/
         ///////////////////////////////////////////////////////
         //
         // Dibujamos la Luna
 
-   /*     // Configuramos la iluminación para la Luna
+   /*     // Configuramos la iluminaciÃ³n para la Luna
         gl.uniform3f(glProgram.ambientColorUniform, 0.3, 0.3, 0.3 );
         gl.uniform3f(glProgram.directionalColorUniform, 0.1, 0.1, 0.1);
         
@@ -561,15 +798,15 @@
         var model_matrix_phobos = mat4.create();
         mat4.identity(model_matrix_phobos);
 
-        // Traslación de la Luna respecto de la Tierra
-        // Es la traslación que la pone en órbita
+        // TraslaciÃ³n de la Luna respecto de la Tierra
+        // Es la traslaciÃ³n que la pone en Ã³rbita
         var phobos_transalte_from_deimos_matrix = mat4.create();
         mat4.identity(phobos_transalte_from_deimos_matrix);
         mat4.translate(phobos_transalte_from_deimos_matrix, phobos_transalte_from_deimos_matrix, [25, 0,0]);
 
-        // Matríz de rotación de la Luna respecto de la tierra.
-        // Como la luna tiene un periodo de rotación sobre su eje que coincide
-        // con el de rotación alrededor de la Tierra, usamos la misma matríz
+        // MatrÃ­z de rotaciÃ³n de la Luna respecto de la tierra.
+        // Como la luna tiene un periodo de rotaciÃ³n sobre su eje que coincide
+        // con el de rotaciÃ³n alrededor de la Tierra, usamos la misma matrÃ­z
         // para ambos movimientos.
         var phobos_rotation_matrix = mat4.create();
         mat4.identity(phobos_rotation_matrix);
@@ -577,14 +814,14 @@
 
         // Secuencia de transformaciones
         // A la luna se le aplican las siguientes transformaciones:
-        // (el órden es el inverso al de las llamadas a la función multiply)
+        // (el Ã³rden es el inverso al de las llamadas a la funciÃ³n multiply)
         // 
-        // 1. Se aplica una rotación sobre el propio eje de la Luna
-        // 2. Se aplica una traslación que representa la distancia entre la Tierra y la Luna
-        // 3. Se aplica una rotación para hacer rotar la Luna alrededor de la Tierra
-        // 4. A partir de acá se aplican las dos transformaciones que son comunes con la Tierra
-        //          4.1 La traslación para poner al sistema Tierra-Luna en orbita alrededor del Sol
-        //          4.2 La rotación para poner al sistema Tierra-Luna a girar en torno al Sol.
+        // 1. Se aplica una rotaciÃ³n sobre el propio eje de la Luna
+        // 2. Se aplica una traslaciÃ³n que representa la distancia entre la Tierra y la Luna
+        // 3. Se aplica una rotaciÃ³n para hacer rotar la Luna alrededor de la Tierra
+        // 4. A partir de acÃ¡ se aplican las dos transformaciones que son comunes con la Tierra
+        //          4.1 La traslaciÃ³n para poner al sistema Tierra-Luna en orbita alrededor del Sol
+        //          4.2 La rotaciÃ³n para poner al sistema Tierra-Luna a girar en torno al Sol.
         //mat4.multiply(model_matrix_phobos, model_matrix_phobos, translation_movement);
         //mat4.multiply(model_matrix_phobos, model_matrix_phobos, translate_deimos);
         mat4.multiply(model_matrix_phobos, model_matrix_phobos, phobos_rotation_matrix);
@@ -604,7 +841,7 @@
         //     
         // Dibujamos al Sol
         
-     /*   // Configuramos la iluminación para el Sol
+     /*   // Configuramos la iluminaciÃ³n para el Sol
         gl.uniform3f(glProgram.ambientColorUniform, 0.3, 0.3, 0.3 );
         gl.uniform3f(glProgram.directionalColorUniform, 0.05, 0.05, 0.05);
 
@@ -636,6 +873,9 @@
         //gl.uniform3f(glProgram.ambientColorUniform, 0.3, 0.3, 0.3 );
         //gl.uniform3f(glProgram.directionalColorUniform, 0.0, 0.0, 0.1);
 
+        gl.uniform3f(glProgram.uColorSpecular, 0.5,0.5,0.5);
+        gl.uniform3fv(glProgram.uViewPos,puntoOjo);
+
         var model_matrix_estacion = mat4.create();
         mat4.identity(model_matrix_estacion);
         mat4.scale(model_matrix_estacion, model_matrix_estacion, [2.0, 2.0, 2.0]);
@@ -654,6 +894,7 @@
         mat4.rotate(model_matrix_nave2,model_matrix_nave2,Math.PI,[0,1,0]);
         mat4.scale(model_matrix_nave2, model_matrix_nave2, [0.07, 0.07, 0.07]);
         nave2.draw(model_matrix_nave2);  
+
     }
 
 
@@ -666,6 +907,7 @@
 
         deimosRotationAnglemars += 0.0045;
         phobosRotationAngledeimos += 0.0005;
+        updateView();
         drawScene();
     }
 
@@ -673,19 +915,38 @@
 
     function webGLStart() {
         var canvas = document.getElementById("clase03-vertex shader");
+
+        canvas.onmousedown = handleMouseDown;
+        document.onmouseup = handleMouseUp;
+        document.onmousemove = handleMouseMove; 
+        document.onkeydown = handleKeyDown;     
+        canvas.addEventListener("mousewheel", handleMouseWheel, false);
+        if (canvas.addEventListener) {    // all browsers except IE before version 9
+        // Internet Explorer, Opera, Google Chrome and Safari
+         canvas.addEventListener ("mousewheel", handleMouseWheel, false);
+        // Firefox
+         canvas.addEventListener ("DOMMouseScroll", handleMouseWheel, false);
+        }
+
         initGL(canvas);
         initShaders();
 
+        luzSol = new LuzDireccional(vec3.fromValues(1, 0, 0), 
+                                    vec3.fromValues(1.0, 1.0, 1.0),
+                                    vec3.fromValues(5.0, 5.0, 5.0));
+
+        luzTierra = new LuzDireccional(vec3.fromValues(0, 1, 0), 
+                                        vec3.fromValues(0.0, 0.0, 1.0), 
+                                        vec3.fromValues(1.0, 1.0, 1.0));
+
+
         deimos = new TexturedSphere(64, 64);
-        deimos.initBuffers();
-        deimos.initTexture("mars_1k_color.jpg");
+        deimos.initTexture("earthh.jpg");
 
         mars = new TexturedSphere(64,64);
-        mars.initBuffers();
         mars.initTexture("sun.jpg");
 
         phobos = new TexturedSphere(64, 64);
-        phobos.initBuffers();
         phobos.initTexture("moon.gif");
 
         
@@ -698,6 +959,12 @@
         gl.clearColor(0.0, 0.0, 0.0, 1.0);
         gl.enable(gl.DEPTH_TEST);
 
+        /*** ACTUALIZO LA CAMARA Y LA MATRIZ DE VISTA UNA PRIMERA VEZ ***/
+        puntoOjo = vec3.fromValues(30,65,-90);
+        puntoMirado = vec3.fromValues(0,0,0);
+        vecArriba = vec3.fromValues(0,1,0);
+        updateView(); //va acÃ¡?
+
         tick();
     }
 
@@ -709,7 +976,7 @@
 
 <body onload="webGLStart();">
     <center>
-            <h1>Sistemas Gráficos - 66.71</h1>
+            <h1>Sistemas GrÃ¡ficos - 66.71</h1>
             <h2>Framework Trabajo Pr&aacute;ctico 2016</h2>
             <canvas id="clase03-vertex shader" style="border: none;" width="1280" height="720">
             Your browser does not support the HTML5 canvas element.
@@ -717,7 +984,7 @@
             
         </center>
     <br/>
-    Las texturas son cortesía de <a href="http://maps.jpl.nasa.gov/">Jet Propulsion Laboratory</a>.
+    Las texturas son cortesÃ­a de <a href="http://maps.jpl.nasa.gov/">Jet Propulsion Laboratory</a>.
     <br/>
     <br/>
 

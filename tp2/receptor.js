@@ -7,7 +7,12 @@ var Receptor = Conjunto.extend({
 		var cilindroSoporte = new Cilindro(0.1);
 		var paleta1 = new Paleta(1,0.15,10,10);
 		var paleta2 = new Paleta(1,0.15,10,10);
-		
+
+		//paleta1.initReflexMap("maps/refMap.jpg");
+		paleta1.initNormalMap("maps/panelsolar-normalMap.jpg");
+		//paleta2.initReflexMap("maps/refMap.jpg");
+		paleta2.initNormalMap("maps/panelsolar-normalMap.jpg");
+
 		var transformacionBase = mat4.create();
 		var transformacionSoporte = mat4.create();
 		var transformacionPaleta1 = mat4.create();

@@ -36,13 +36,13 @@ var Geometria = Base.extend({
 
 	this.useLights = true;
 
-	this.ka = 0.1;
-	this.kd = 0.1;
-	this.ks = 0.1;
-	this.shininess = 0.0;
-	this.color_diffuse = 0.0;
-	this.color_specular = vec3.fromValues(0.0,0.0,0.0);
-	this.reflectiveness = 0.0;
+	this.ka = 0.2;
+	this.kd = 0.5;
+	this.ks = 0.3;
+	this.shininess = 0.01;
+	this.color_diffuse = 0.7;
+	this.color_specular = vec3.fromValues(0.1,0.1,0.1);
+	this.reflectiveness = 0.3;
 
 	this.useNormalMap = false;
 	this.normalMap = null;
@@ -333,7 +333,7 @@ var Geometria = Base.extend({
         gl.uniform1f(glProgram.uShininess, this.shininess);
         gl.uniform1f(glProgram.uReflectiveness, this.reflectiveness);
 
-       // gl.uniform3fv(glProgram.uColorSpecular, this.color_specular);
+       	gl.uniform3fv(glProgram.uColorSpecular, this.color_specular);
                 
 
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_position_buffer);
@@ -352,7 +352,7 @@ var Geometria = Base.extend({
         gl.bindTexture(gl.TEXTURE_2D, this.texture);
         gl.uniform1i(glProgram.uSampler, 0);
 
-        gl.activeTexture(gl.TEXTURE0);
+        gl.activeTexture(gl.TEXTURE1);
         gl.bindTexture(gl.TEXTURE_2D, this.normalMap);
         gl.uniform1i(glProgram.uNormalSampler, 1);
 

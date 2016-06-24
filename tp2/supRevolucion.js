@@ -70,8 +70,8 @@ var SupRevolucion = Geometria.extend({
 				this.binormal_buffer.push(binormal[1]);
 				this.binormal_buffer.push(binormal[2]);
 
-				this.texture_coord_buffer.push(0.0);
-				this.texture_coord_buffer.push(0.0);
+				this.texture_coord_buffer.push(1.0-col/this.cols);
+				this.texture_coord_buffer.push(1.0-row/this.rows);
 			}
 		}
 	

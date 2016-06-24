@@ -26,13 +26,11 @@ var EstructuraCentral = SupRevolucion.extend({
 		SupRevolucion.prototype.initialize.call(this, perfil, eje, angulo, paso2);
 
 		this.setColor([0.9,0.9,0.9]);
-	/*
-		this.texture = gl.createTexture();
-		gl.bindTexture(gl.TEXTURE_2D, this.texture);
-		var whitePixel = new Uint8Array([255, 255, 255, 255]);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, whitePixel);
-	*/	
-		this.useTexture = 0.0;
+
+		this.useTexture = 1.0;
+		
+		this.initTexture("maps/shiphull.jpg");
+		this.initNormalMap("maps/shiphull_normalmap.jpg");
 
 		//ARCO CENTRAL
 		var arco = new Arco(5,0.75*2*Math.PI,0.05);
