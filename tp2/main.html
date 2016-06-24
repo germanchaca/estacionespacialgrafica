@@ -57,7 +57,7 @@
 			vec3 ambient;
 			vec3 intensity;
 		};
-		//uniform PointLight pointLights[4]; //5 lces puntuales dentro del angar
+		uniform PointLight pointLights[5]; //5 lces puntuales dentro del angar
 		uniform DirLight dirLights[2]; //luz del sol y de la tierra, direccionales
 		uniform float numLights;
 		
@@ -74,6 +74,8 @@
 		uniform float uUseTexture;
         uniform bool uUseMultipleTextures;
 		uniform bool uUseLights;
+        uniform bool uUseDirectionalLights;
+        uniform bool uUsePointLights;
 		
 		uniform bool uUseNormalMap;
 		uniform bool uUseReflection;
@@ -146,60 +148,65 @@
             vec3 color_final =vec3(0.0,0.0,0.0);
 
 			// dir lights
-            for(int i = 0; i < 2; ++i){
-            
-                // cosas que dependen de cada luz
-                vec3 Ia = dirLights[i].ambient; // luz ambiente (cada luz contribuye a esto)
-                vec3 Ip = dirLights[i].intensity; // intensidad de la luz ficticia
-                vec3 lightDir = normalize(dirLights[i].direction); //direccion de la luz
+            if (uUseDirectionalLights)
+            {
+                for(int i = 0; i < 2; ++i){
                 
-                vec3 reflectDir = reflect(lightDir, normal);
-                // esto es para el factor de atenuacion segun la distancia al observador
-                // constantes (de 0 a 1)
-                /*float c1 = 0.0;
-                float c2 = 0.02;
-                float c3 = 0.0;
-                float dist_to_light = 9.0; //OJO
-                float fatt = min(1.0 / (c1 + c2*dist_to_light + c3*pow(dist_to_light, 2.0)), 1.0);*/          
-                float lambertian = max(dot(lightDir,normal), 0.0);
-                float specular = 0.0;
-                if(lambertian > 0.0) {
-                   float specAngle = max(dot(reflectDir, viewDir), 0.0);
-                   specular = pow(specAngle, uShininess);
-                }
+                    // cosas que dependen de cada luz
+                    vec3 Ia = dirLights[i].ambient; // luz ambiente (cada luz contribuye a esto)
+                    vec3 Ip = dirLights[i].intensity; // intensidad de la luz ficticia
+                    vec3 lightDir = normalize(dirLights[i].direction); //direccion de la luz
+                    
+                    vec3 reflectDir = reflect(lightDir, normal);
+                    // esto es para el factor de atenuacion segun la distancia al observador
+                    // constantes (de 0 a 1)
+                    /*float c1 = 0.0;
+                    float c2 = 0.02;
+                    float c3 = 0.0;
+                    float dist_to_light = 9.0; //OJO
+                    float fatt = min(1.0 / (c1 + c2*dist_to_light + c3*pow(dist_to_light, 2.0)), 1.0);*/          
+                    float lambertian = max(dot(lightDir,normal), 0.0);
+                    float specular = 0.0;
+                    if(lambertian > 0.0) {
+                       float specAngle = max(dot(reflectDir, viewDir), 0.0);
+                       specular = pow(specAngle, uShininess);
+                    }
 
-                color_final += Ia * color  * uKa + (Ip) * (color * uKd * lambertian + uColorSpecular * uKs * specular);
+                    color_final += Ia * color  * uKa + (Ip) * (color * uKd * lambertian + uColorSpecular * uKs * specular);
+                }
             }
 
-        /*    // point lights
-			for(int i = 0; i < 5; ++i){
-			
-				// cosas que dependen de cada luz
-				vec3 Ia = pointLights[i].ambient; // luz ambiente (cada luz contribuye a esto)
-				vec3 lightPos = pointLights[i].position;
-				vec3 Ip = pointLights[i].intensity; // intensidad de la luz ficticia
-				
-				vec3 lightDir = normalize(lightPos - vertPos);
-				vec3 reflectDir = reflect(lightDir, normal);
-				// esto es para el factor de atenuacion segun la distancia al observador
-				// constantes (de 0 a 1)
-				float c1 = 0.0;
-				float c2 = 0.02;
-				float c3 = 0.0;
-				float dist_to_light = length(lightPos - vertPos);
-				float fatt = min(1.0 / (c1 + c2*dist_to_light + c3*pow(dist_to_light, 2.0)), 1.0);			
-				float lambertian = max(abs(dot(lightDir,normal)), 0.0);
-				float specular = 0.0;
-				if(lambertian > 0.0) {
-				   float specAngle = max(dot(reflectDir, viewDir), 0.0);
-				   specular = pow(specAngle, uShininess);
-				}
-				
-				color_final += Ia * color * uKa + 
-									(Ip ) * fatt * (color * uKd * lambertian + 
-												uColorSpecular * uKs * specular);
-			}
-		*/	
+           if (uUsePointLights)
+           {
+           // point lights
+    			for(int i = 0; i < 5; ++i){
+    			
+    				// cosas que dependen de cada luz
+    				vec3 Ia = pointLights[i].ambient; // luz ambiente (cada luz contribuye a esto)
+    				vec3 lightPos = pointLights[i].position;
+    				vec3 Ip = pointLights[i].intensity; // intensidad de la luz ficticia
+    				
+    				vec3 lightDir = normalize(lightPos - vertPos);
+    				vec3 reflectDir = reflect(lightDir, normal);
+    				// esto es para el factor de atenuacion segun la distancia al observador
+    				// constantes (de 0 a 1)
+    				float c1 = 0.0;
+    				float c2 = 0.02;
+    				float c3 = 0.0;
+    				float dist_to_light = length(lightPos - vertPos);
+    				float fatt = min(1.0 / (c1 + c2*dist_to_light + c3*pow(dist_to_light, 2.0)), 1.0);			
+    				float lambertian = max(abs(dot(lightDir,normal)), 0.0);
+    				float specular = 0.0;
+    				if(lambertian > 0.0) {
+    				   float specAngle = max(dot(reflectDir, viewDir), 0.0);
+    				   specular = pow(specAngle, uShininess);
+    				}
+    				
+    				color_final += Ia * color * uKa + 
+    									(Ip ) * fatt * (color * uKd * lambertian + 
+    												uColorSpecular * uKs * specular);
+    			}
+            }
             
         /*    if (uUseReflection) 
             {
@@ -388,15 +395,15 @@
             glProgram.dirLights.push(light);
         }
             
-       /* glProgram.pointLights = new Array;
-        for(var i = 0; i < 6; ++i){
+        glProgram.pointLights = new Array;
+        for(var i = 0; i < 5; ++i){
             var light = new Array;
             light.push(gl.getUniformLocation(glProgram, "pointLights[" + i + "]." + "position"));
             light.push(gl.getUniformLocation(glProgram, "pointLights[" + i + "]." + "ambient"));
             light.push(gl.getUniformLocation(glProgram, "pointLights[" + i + "]." + "intensity"));
             glProgram.pointLights.push(light);
         }
-    */
+
         glProgram.numLights = gl.getUniformLocation(glProgram, "numLights");
         
         glProgram.uViewPos = gl.getUniformLocation(glProgram, "uViewPos");
@@ -413,6 +420,9 @@
         glProgram.uUseReflection = gl.getUniformLocation(glProgram, "uUseReflection");
         //gl.uniform1i(glProgram.uUseReflection, 0);
         glProgram.uUseLights = gl.getUniformLocation(glProgram, "uUseLights");
+        glProgram.uUseDirectionalLights = gl.getUniformLocation(glProgram, "uUseDirectionalLights");
+        glProgram.uUsePointLights = gl.getUniformLocation(glProgram, "uUsePointLights");
+
         //gl.uniform1i(glProgram.uUseLights, 0);
         
         glProgram.uSampler = gl.getUniformLocation(glProgram, "uSampler");
@@ -673,8 +683,14 @@
 
 
         luzTierra.render();
-            
-        // luces puntuales
+
+        luzPuntual1.render();
+        luzPuntual2.render();
+        luzPuntual3.render();
+        luzPuntual4.render();
+        luzPuntual5.render();
+        
+         // luces puntuales
         /*var ip_night = 0.25;
         var ia_night = 0.05;
         light_noche1 = new PointLight(vec3.fromValues(-20.0, -10.0, 5.0), 
@@ -974,8 +990,28 @@
                                         vec3.fromValues(0.0, 0.0, 1.0), 
                                         vec3.fromValues(1.0, 1.0, 1.0));
 
+        luzPuntual1 = new LuzPuntual(vec3.fromValues(5, 1, 0),
+                                    vec3.fromValues(0.1,0.1,0.1),
+                                    vec3.fromValues(1.0,1.0,1.0));
+
+        luzPuntual2 = new LuzPuntual(vec3.fromValues(-5, 1, 0 ),
+                                    vec3.fromValues(0.1,0.1,0.1),
+                                    vec3.fromValues(1.0,1.0,1.0));
+
+        luzPuntual3 = new LuzPuntual(vec3.fromValues(5, 0, 0),
+                                    vec3.fromValues(0.1,0.1,0.1),
+                                    vec3.fromValues(1.0,1.0,1.0));
+
+        luzPuntual4 = new LuzPuntual(vec3.fromValues(0, 0, -5),
+                                    vec3.fromValues(0.1,0.1,0.1),
+                                    vec3.fromValues(1.0,1.0,1.0));
+        luzPuntual5 = new LuzPuntual(vec3.fromValues(0, 0, 0),
+                                    vec3.fromValues(0.1,0.1,0.1),
+                                    vec3.fromValues(1.0,1.0,1.0));
+
 
         galaxia = new Galaxia(200);
+
 
         deimos = new TexturedSphere(64, 64);
         deimos.initTexture("earthh.jpg");
@@ -986,7 +1022,7 @@
         phobos = new TexturedSphere(64, 64);
         phobos.initTexture("moon.gif");
 
-        
+        //var cilindro = new Cilindro(0.02);        
 
         estacion = new EstructuraCentral(0.05,0.02);
 

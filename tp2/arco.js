@@ -52,7 +52,7 @@ var Arco = SupBarrido.extend({
 		this.initNormalMap("maps/shiphull_normalmap.jpg");
 
 
-		var arcoInterno = new ArcoInterno(puntosRecorrido,basesRecorrido);
+		var arcoInterno = new ArcoInterno(puntosRecorrido,basesRecorrido,4);
 		this.addDependencie(arcoInterno);
 
 		//TAPAS

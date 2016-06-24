@@ -39,6 +39,8 @@ var Geometria = Base.extend({
 	this.webgl_binormal_buffer = null;
 
 	this.useLights = true;
+	this.useDirectionalLights = true;
+	this.usePointLights = false;
 
 	this.ka = 0.2;
 	this.kd = 0.5;
@@ -344,6 +346,8 @@ var Geometria = Base.extend({
         gl.uniform1i(glProgram.uUseNormalMap, this.useNormalMap);
         gl.uniform1i(glProgram.uUseReflection, this.useReflexMap);
         gl.uniform1i(glProgram.uUseLights, this.useLights);
+        gl.uniform1i(glProgram.uUseDirectionalLights, this.useDirectionalLights);
+        gl.uniform1i(glProgram.uUsePointLights, this.usePointLights);
 
         gl.uniform1f(glProgram.uKa, this.ka);
         gl.uniform1f(glProgram.uKd, this.kd);
