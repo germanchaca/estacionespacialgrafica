@@ -4,6 +4,7 @@ var DobleReceptor = Conjunto.extend({
 		Conjunto.prototype.initialize.call(this);
 
 		var cilindro = new Cilindro(0.1);
+		cilindro.initTexture("maps/dorado.jpg");
 		var receptor1 = new Receptor();
 		var receptor2 = new Receptor();
 		

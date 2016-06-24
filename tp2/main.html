@@ -134,17 +134,14 @@
             
             vec3 viewDir = normalize(vertPos - uViewPos);
 
-           if (uUseReflection) 
+            if (uUseReflection) 
             {
                 vec3 reflectDir = normalize(reflect(viewDir, normal));
                 vec2 reflectDir2D = vec2(reflectDir.x,reflectDir.y);
                 vec3 enviromentColor = texture2D(uReflectionSampler, reflectDir2D).rgb; 
-                color = mix(color, enviromentColor, uReflectiveness);
-                //gl_FragColor = vec4(mix(vec4(color,1.0), enviromentColor, uReflectiveness).rgb, 1.0);
-                return;			 
+                color = mix(color, enviromentColor, uReflectiveness); 
             }
 			 
-			
             vec3 color_final =vec3(0.0,0.0,0.0);
 
 			// dir lights
@@ -201,7 +198,18 @@
 									(Ip ) * fatt * (color * uKd * lambertian + 
 												uColorSpecular * uKs * specular);
 			}
-		*/			
+		*/	
+            
+        /*    if (uUseReflection) 
+            {
+                vec3 reflectDir = (reflect(viewDir, normal));
+                vec2 reflectDir2D = vec2(reflectDir.x,reflectDir.y);
+                vec3 enviromentColor = texture2D(uReflectionSampler, texCoord).rgb; 
+                color_final = mix(color, enviromentColor, 0.5);
+                //gl_FragColor = vec4(mix(vec4(color,1.0), enviromentColor, uReflectiveness).rgb, 1.0);
+                //return;          
+            }
+        */
 			gl_FragColor = vec4(color_final, 1.0);
 			
 		}
@@ -392,7 +400,7 @@
     */
         glProgram.numLights = gl.getUniformLocation(glProgram, "numLights");
         
-        //glProgram.uViewPos = gl.getUniformLocation(glProgram, "uViewPos");
+        glProgram.uViewPos = gl.getUniformLocation(glProgram, "uViewPos");
         glProgram.uColorSpecular = gl.getUniformLocation(glProgram, "uColorSpecular");
         glProgram.uKa = gl.getUniformLocation(glProgram, "uKa");
         glProgram.uKd = gl.getUniformLocation(glProgram, "uKd");
