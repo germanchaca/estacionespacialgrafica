@@ -1,5 +1,5 @@
 var Arco = SupBarrido.extend({
-	initialize: function(radio,anguloTotal,paso)
+	initialize: function(radio,anguloTotal,paso,NumTextures)
 	{
 		
 
@@ -39,10 +39,15 @@ var Arco = SupBarrido.extend({
 		//puntosRecorrido = [[0,0,1],[0,0,2],[0,0,3],[0,0,4],[0,0,5][0,0,6],[0,0,7],[0,0,8],[0,0,9],[0,0,10]];
 		//basesRecorrido = [ [[1,0,0],[0,1,0],[0,0,1]]
 
+		this.NumTextures = NumTextures;
+
 		SupBarrido.prototype.initialize.call(this, poligono, puntosRecorrido, basesRecorrido);
+
 		
 		this.useTexture = 1.0;
+		//this.useMultipleTextures = true;
 		this.initTexture("maps/shiphull.jpg");
+		this.initSecondTexture("maps/ventanal.jpg");
 		this.initNormalMap("maps/shiphull_normalmap.jpg");
 
 
@@ -107,6 +112,7 @@ var Arco = SupBarrido.extend({
 	{
 		this.draw_mode=gl.TRIANGLE_STRIP; //Estas tres definiciones tienen que estar aca
 		this.tangent_buffer = []; //Esta en null por defecto
+		this.texture_index_buffer = [];
 
 		this.cols = this.poligono.puntos.length;
 		this.rows = this.puntosRecorrido.length;
@@ -117,6 +123,10 @@ var Arco = SupBarrido.extend({
 		var baseRecorrido;
 		var puntos,tangentes,normales
 					
+		var rowsByTexture = this.rows/this.NumTextures;
+
+		var rowForTexture;  
+					
 		for (var row = 0.0; row < this.rows; row++)
 		{
 			puntoRecorrido = this.puntosRecorrido[row];
@@ -125,6 +135,9 @@ var Arco = SupBarrido.extend({
 			puntos = poligonoTransformado.puntos;
 			tangentes = poligonoTransformado.tangentes;
 			normales = poligonoTransformado.normales;
+
+			rowForTexture = row%rowsByTexture;
+
 			for (var col = 0.0; col < this.cols; col++)
 			{
 				punto = puntos[col];
@@ -152,8 +165,18 @@ var Arco = SupBarrido.extend({
 				this.binormal_buffer.push(binormal[1]);
 				this.binormal_buffer.push(binormal[2]);
 
-				this.texture_coord_buffer.push(1.0-col/this.cols);
-				this.texture_coord_buffer.push(1.0-row/this.rows);
+				if ((Math.abs(punto[1]))<0.2)
+				{	
+					this.texture_coord_buffer.push(1.0-col/this.cols);
+					this.texture_coord_buffer.push(1.0-rowForTexture/rowsByTexture);
+					this.texture_coord_buffer.push(1);
+				}
+				else
+				{
+					this.texture_coord_buffer.push(1.0-col/this.cols);
+					this.texture_coord_buffer.push(1.0-rowForTexture/rowsByTexture);
+					this.texture_coord_buffer.push(0);	
+				}
 				//Agregar indice de paredes/techo
 			}
 		}

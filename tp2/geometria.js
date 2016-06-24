@@ -11,7 +11,11 @@ var Geometria = Base.extend({
 	this.dependencies = [];
 
 	this.texture = null;
+	this.secondTexture = null;
+	this.thirdTexture = null;
 	this.useTexture = 0.0;
+
+	this.useMultipleTextures = false;
 	
 	// buffers
 	this.position_buffer = [];
@@ -214,12 +218,24 @@ var Geometria = Base.extend({
 	initReflexMap: function(map_file)
 	{
 		this.useReflexMap = true;
-		//this.reflexMap = this.loadMap(map_file);
+		this.reflexMap = this.loadMap(map_file);
 	},
 
 	initTexture: function(texture_file)
 	{
 		this.texture = this.loadMap(texture_file);
+		this.useTexture = 1.0;
+	},
+
+	initSecondTexture: function(texture_file)
+	{
+		this.secondTexture = this.loadMap(texture_file);
+		this.useTexture = 1.0;
+	},
+
+	initThirdTexture: function(texture_file)
+	{
+		this.thirdTexture = this.loadMap(texture_file);
 		this.useTexture = 1.0;
 	},
 
@@ -281,8 +297,8 @@ var Geometria = Base.extend({
         this.webgl_texture_coord_buffer = gl.createBuffer();
         gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_texture_coord_buffer);
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(this.texture_coord_buffer), gl.STATIC_DRAW);
-        this.webgl_texture_coord_buffer.itemSize = 2;
-        this.webgl_texture_coord_buffer.numItems = this.texture_coord_buffer.length / 2;
+        this.webgl_texture_coord_buffer.itemSize = 3;
+        this.webgl_texture_coord_buffer.numItems = this.texture_coord_buffer.length / 3;
 
 		//Indices
 		this.webgl_index_buffer = gl.createBuffer();
@@ -324,6 +340,7 @@ var Geometria = Base.extend({
 	{
 		gl.uniform1f(glProgram.UseTexture, this.useTexture);
 
+		gl.uniform1i(glProgram.UseMultipleTextures, this.useMultipleTextures);
         gl.uniform1i(glProgram.uUseNormalMap, this.useNormalMap);
         gl.uniform1i(glProgram.uUseReflection, this.useReflexMap);
         gl.uniform1i(glProgram.uUseLights, this.useLights);
@@ -357,10 +374,18 @@ var Geometria = Base.extend({
         gl.bindTexture(gl.TEXTURE_2D, this.normalMap);
         gl.uniform1i(glProgram.uNormalSampler, 1);
 
-        /*gl.activeTexture(gl.TEXTURE2);
+        gl.activeTexture(gl.TEXTURE2);
         gl.bindTexture(gl.TEXTURE_2D, this.reflexMap);
         gl.uniform1i(glProgram.uReflectionSampler, 2);
-		*/
+		
+        gl.activeTexture(gl.TEXTURE3);
+        gl.bindTexture(gl.TEXTURE_2D, this.secondTexture);
+        gl.uniform1i(glProgram.uSampler2, 3);
+
+        gl.activeTexture(gl.TEXTURE4);
+        gl.bindTexture(gl.TEXTURE_2D, this.thirdTexture);
+        gl.uniform1i(glProgram.uSampler3, 4);
+		
         var model_matrix_final = mat4.create();
 		mat4.multiply(model_matrix_final, m, this.model_matrix);
 		gl.uniformMatrix4fv(glProgram.ModelMatrixUniform, false, model_matrix_final); //le pasa al programa de vertices la matriz de modelado del objeto
@@ -383,11 +408,12 @@ var Geometria = Base.extend({
 			gl.bindBuffer(gl.ARRAY_BUFFER, this.webgl_binormal_buffer);
 			gl.vertexAttribPointer(glProgram.vertexBinormalAttribute, 3, gl.FLOAT, false, 0, 0);
 		}
-		
+
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.webgl_index_buffer);
 
 		// Dibuja
 		gl.drawElements(this.draw_mode, this.index_buffer.length, gl.UNSIGNED_SHORT, 0);
+		
 		/*gl.disableVertexAttribArray(vertexPositionAttribute);
 		gl.disableVertexAttribArray(vertexColorAttribute);
 		gl.disableVertexAttribArray(vertexNormalAttribute);

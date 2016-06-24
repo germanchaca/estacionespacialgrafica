@@ -33,7 +33,7 @@ var EstructuraCentral = SupRevolucion.extend({
 		this.initNormalMap("maps/shiphull_normalmap.jpg");
 
 		//ARCO CENTRAL
-		var arco = new Arco(5,0.75*2*Math.PI,0.05);
+		var arco = new Arco(5,0.75*2*Math.PI,0.05,4);
 		transformacion = mat4.create();
 		mat4.translate(transformacion,transformacion,[0,2.55,0]);
 		arco.applyMatrix(transformacion);

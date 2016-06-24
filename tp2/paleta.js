@@ -70,6 +70,7 @@ var Paleta = Geometria.extend({
 
 				this.texture_coord_buffer.push(col/this.cols);
 				this.texture_coord_buffer.push(row/this.rows);
+				this.texture_coord_buffer.push(0);
 			
 				puntoY += deltaY;
 			}

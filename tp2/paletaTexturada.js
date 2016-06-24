@@ -75,6 +75,7 @@ var PaletaTexturada = Paleta.extend({
 
 				this.texture_coord_buffer.push(0.0);
 				this.texture_coord_buffer.push(0.0);
+				this.texture_coord_buffer.push(0);
 			
 				puntoY += deltaY;
 			}

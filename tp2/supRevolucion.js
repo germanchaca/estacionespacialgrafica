@@ -72,6 +72,7 @@ var SupRevolucion = Geometria.extend({
 
 				this.texture_coord_buffer.push(1.0-col/this.cols);
 				this.texture_coord_buffer.push(1.0-row/this.rows);
+				this.texture_coord_buffer.push(0);
 			}
 		}
 	

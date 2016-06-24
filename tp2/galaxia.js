@@ -1,9 +1,17 @@
 var Galaxia = Conjunto.extend({
-	initialize: function(distancia)
+	initialize: function(scale_factor)
 	{
 		Conjunto.prototype.initialize.call(this);
 
-		var universo = new Paleta(5,5,100,100);
+		var galaxy = new TexturedSphere(100,100,true);
+		galaxy.initTexture("maps/sky.jpg");
+		
+		var matGalaxy = mat4.create();
+		mat4.scale(matGalaxy,matGalaxy,[scale_factor,scale_factor,scale_factor]);
+		galaxy.applyMatrix(matGalaxy);
+		this.add(galaxy);	
+
+		/*var universo = new Paleta(5,5,100,100);
 		universo.initTexture("maps/sky.jpg");
 
 		var matUniverso = mat4.create();
@@ -58,7 +66,7 @@ var Galaxia = Conjunto.extend({
 		mat4.scale(matUniverso,matUniverso,[distancia*2,distancia*2,1]);
 		mat4.translate(matUniverso,matUniverso,[-0.5,-0.5,0]);
 		universo.applyMatrix(matUniverso);
-		this.add(universo);
+		this.add(universo);*/
 /*
 
 		var transformacion = mat4.create();

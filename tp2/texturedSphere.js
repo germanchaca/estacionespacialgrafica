@@ -1,8 +1,9 @@
 var TexturedSphere = Geometria.extend({
-	initialize: function(latitude_bands,longitude_bands)
+	initialize: function(latitude_bands,longitude_bands,inv_normals)
 	{
 		this.rows = latitude_bands;
         this.cols = longitude_bands;
+        this.inv_normals = inv_normals;
 
 		
 		Geometria.prototype.initialize.call(this);
@@ -16,6 +17,9 @@ var TexturedSphere = Geometria.extend({
 		var latNumber;
         var longNumber;
 
+        var factorNormales = 1;
+        if (this.inv_normals)
+        	factorNormales = -1;
         for (latNumber=0; latNumber <= this.rows; latNumber++) 
         {
             var theta = latNumber * Math.PI / this.rows;
@@ -34,10 +38,10 @@ var TexturedSphere = Geometria.extend({
                 var u = 1.0 - (longNumber / this.cols);
                 var v = 1.0 - (latNumber / this.rows);
 
-                normal = vec3.fromValues(x,y,z);
-                this.normals_buffer.push(x);
-                this.normals_buffer.push(y);
-                this.normals_buffer.push(z);
+                normal = vec3.fromValues(x,y,z)*factorNormales;
+                this.normals_buffer.push(normal[1]);
+                this.normals_buffer.push(normal[2]);
+                this.normals_buffer.push(normal[3]);
 
                 tangente = vec3.fromValues(0,0,0); //CORREGIR
                 this.tangent_buffer.push(tangente[0]);
@@ -52,6 +56,7 @@ var TexturedSphere = Geometria.extend({
 
                 this.texture_coord_buffer.push(u);
                 this.texture_coord_buffer.push(v);
+                this.texture_coord_buffer.push(0);
 
                 this.position_buffer.push(x);
                 this.position_buffer.push(y);
