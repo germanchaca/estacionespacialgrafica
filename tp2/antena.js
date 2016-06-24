@@ -5,7 +5,9 @@ var Antena = Conjunto.extend({
 		Conjunto.prototype.initialize.call(this);
 
 		var cilindro = new Cilindro(0.1);
+		cilindro.initTexture("maps/cil.jpg");
 		var cilindro2 = new Cilindro(0.1);
+		cilindro2.initTexture("maps/cil.jpg");
 		var transformacion1 = mat4.create();
 		var transformacion2 = mat4.create();
 		

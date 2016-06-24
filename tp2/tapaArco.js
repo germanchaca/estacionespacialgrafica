@@ -13,6 +13,7 @@ var TapaArco = Geometria.extend({
 		Geometria.prototype.initialize.call(this);
 		this.useTexture = 0.0;
 	
+		this.initTexture("maps/shiphull.jpg");
 	},
 
 	createGrid: function()

@@ -12,10 +12,10 @@ var Receptor = Conjunto.extend({
 
 		paleta1.initReflexMap("maps/refMap.jpg");
 		paleta1.initTexture("maps/panel_solar.jpg");
-		paleta1.initNormalMap("maps/panelsolar-normalMap.jpg");
+		paleta1.initNormalMap("maps/panelsolar-normalmap-modified.jpg");
 		paleta2.initReflexMap("maps/refMap.jpg");
 		paleta2.initTexture("maps/panel_solar.jpg");
-		paleta2.initNormalMap("maps/panelsolar-normalMap.jpg");
+		paleta2.initNormalMap("maps/panelsolar-normalmap-modified.jpg");
 
 		var transformacionBase = mat4.create();
 		var transformacionSoporte = mat4.create();
