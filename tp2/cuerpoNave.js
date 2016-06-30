@@ -2,6 +2,7 @@ var CuerpoNave = Geometria.extend({
 	initialize: function()
 	{
 		
+
 		this.puntos = [ [[-10,0.7,1.5], [-4.5,2,2], [-1.5,3.3,2.5], [4,4,3], [7.5,3.5,2], [8.5,3.4,2]],
 						[[-10,0.35,1.75], [-4.75,1,2], [-1.5,2,3], [4,2.5,3.5], [7.5,1.75,3], [9.5,1.5,2]],
 						[[-10,0,2], [-5,0,2.5], [-1.5,0,3], [4,0,3], [7.5,0,2.5], [10,0,2.5]],
@@ -58,6 +59,7 @@ var CuerpoNave = Geometria.extend({
 	
 	},
 
+	
 	createGrid: function()
 	{
 		this.draw_mode=gl.TRIANGLES; 
