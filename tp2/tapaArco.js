@@ -11,8 +11,6 @@ var TapaArco = Geometria.extend({
 		this.curvaExterna = curvaExterna;
 		this.paso = paso;
 		Geometria.prototype.initialize.call(this);
-
-		cilindro.initTexture("maps/shiphull.jpg");
 	
 		this.initTexture("maps/shiphull.jpg");
 	},
