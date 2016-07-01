@@ -10,13 +10,15 @@ var Turbina = SupRevolucion.extend({
 		var anguloRevolucion = 2*Math.PI;
 		
 		SupRevolucion.prototype.initialize.call(this, perfil, eje, anguloRevolucion, paso);
+
+		//this.initTexture("maps/dorado.jpg");
 	/*
 		this.texture = gl.createTexture();
 		gl.bindTexture(gl.TEXTURE_2D, this.texture);
 		var whitePixel = new Uint8Array([255, 255, 255, 255]);
 		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE, whitePixel);
 	*/	
-		this.useTexture = 0.0;
+		this.useTexture = 0.8;
 		this.setColor([0.7,0.9,0.6]);
 
 

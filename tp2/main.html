@@ -440,6 +440,8 @@
     var phobos = null;
 	
 	var nave1 = null;
+    var estacion = null;
+    var panelesAbiertos = true;
 
     enviromentReflectionTexture = null;
 
@@ -576,6 +578,17 @@
 	}
 
     function handleKeyDown(event){
+        //animacion paneles
+        if(event.keyCode == 80){
+            if (panelesAbiertos){
+                estacion.cerrarPaneles();
+                panelesAbiertos = false;
+            }
+            else{
+                estacion.abrirPaneles();
+                panelesAbiertos = true;
+            }
+        }
 		if ((camara == 1) || (camara == 3)){
 			if(event.keyCode == 76) nave1.onTeclaDown(nave1.TECLA_MAS);  // L para darle velocidad
 			if(event.keyCode == 75) nave1.onTeclaDown(nave1.TECLA_MENOS);  // K para frenar
@@ -809,7 +822,7 @@
         //var cilindro = new Cilindro(0.02);        
 
         estacion = new EstructuraCentral(0.05,0.02);
-
+        
         nave1 = new Nave(0.0);
         nave2 = new Nave(0.25*Math.PI)
 
@@ -854,6 +867,8 @@
 			<b> <font color="blue">Cambio de cámara: </font></b>C
 			</br>
 			<b> <font color="blue">Movimiento nave: </font></b>WASD rotar,QE girar  L acelerar, K desacelerear (NO se habilita en cámara primera persona)
+            </br>
+            <b> <font color="blue">Animación paneles: </font></b>P
             <canvas id="clase03-vertex shader" style="border: none;" width="1280" height="720">
             Your browser does not support the HTML5 canvas element.
             </canvas>

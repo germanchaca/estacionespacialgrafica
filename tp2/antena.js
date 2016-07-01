@@ -27,12 +27,34 @@ var Antena = Conjunto.extend({
 		var transformacionReceptor = mat4.create();
 		mat4.translate(transformacionReceptor,transformacionReceptor,[0,5,0]);
 		
+		this.doblesReceptores = [];
 		for (var i = 0; i < 4; i++)
 		{
 			var dobleReceptor = new DobleReceptor(0);
 			mat4.translate(transformacionReceptor,transformacionReceptor,[0,1,0]);
 			dobleReceptor.applyMatrix(transformacionReceptor);
-			this.add(dobleReceptor);			
+			this.add(dobleReceptor);
+			this.doblesReceptores.push(dobleReceptor)			
+		}
+	},
+	cerrar: function(signo)
+	{
+		transformacionReceptor = mat4.create();
+		for (var i = 0; i < 4; i++)
+		{
+			this.doblesReceptores[i].cerrar(signo);
+			mat4.translate(transformacionReceptor,transformacionReceptor,[0,-0.6,0]);
+			this.doblesReceptores[i].applyMatrix(transformacionReceptor);
+		}
+	},
+	abrir: function(signo)
+	{
+		transformacionReceptor = mat4.create();
+		for (var i = 0; i < 4; i++)
+		{
+			this.doblesReceptores[i].abrir(signo);
+			mat4.translate(transformacionReceptor,transformacionReceptor,[0,0.6,0]);
+			this.doblesReceptores[i].applyMatrix(transformacionReceptor);
 		}
 	}
 })

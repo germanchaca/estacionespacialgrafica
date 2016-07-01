@@ -58,18 +58,28 @@ var EstructuraCentral = SupRevolucion.extend({
 		}
 
 		//ANTENAS
-		var antena = new Antena();
+		this.antena1 = new Antena();
 		var transformacion = mat4.create();
 		mat4.rotate(transformacion,transformacion,-0.25*Math.PI,[0,1,0]);
-		antena.applyMatrix(transformacion);
-		this.addDependencie(antena);
+		this.antena1.applyMatrix(transformacion);
+		this.addDependencie(this.antena1);
 
-		var antena = new Antena();
+		this.antena2 = new Antena();
 		//Uso la transformacion de la antena anterior
 		mat4.translate(transformacion,transformacion,[0,5,0]);
 		mat4.rotate(transformacion,transformacion,Math.PI,[0,1,0]);
 		mat4.rotate(transformacion,transformacion,Math.PI,[1,0,0]);
-		antena.applyMatrix(transformacion);
-		this.addDependencie(antena);
+		this.antena2.applyMatrix(transformacion);
+		this.addDependencie(this.antena2);
 	},
+	cerrarPaneles: function()
+	{
+		this.antena1.cerrar(0);
+		this.antena2.cerrar(0);
+	},
+	abrirPaneles: function()
+	{
+		this.antena1.abrir(0);
+		this.antena2.abrir(1);
+	}
 })

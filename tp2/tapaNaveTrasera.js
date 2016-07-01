@@ -12,6 +12,8 @@ var TapaNaveTrasera = Geometria.extend({
 		
 		Geometria.prototype.initialize.call(this);
 
+		this.initReflexMap("maps/refMap.jpg");
+
 		this.useTexture = 0.0;
 	
 	},
