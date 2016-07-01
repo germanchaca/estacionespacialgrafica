@@ -6,7 +6,7 @@ var Nave = Conjunto.extend({
 		var cuerpoNave = new CuerpoNave();
 		this.add(cuerpoNave);
 //INICIO variables para movimiento de nave
-		posicion=vec3.fromValues(7,0,-10);
+		posicion=vec3.fromValues(7,0,-15);
 		this.TECLA_ARRIBA=0;
 		this.TECLA_ABAJO=1;
 		this.TECLA_IZQUIERDA=2;
@@ -17,6 +17,8 @@ var Nave = Conjunto.extend({
 		this.TECLA_GIRO_ANTIHORARIO=7;
 		estadoTeclas = [false,false,false,false,false,false];
 		rotacion=mat4.create();
+		
+		
 		mat4.identity(rotacion);
 		potenciaMotor=0.01;
 		velocidad=0;
