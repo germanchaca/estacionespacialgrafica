@@ -709,9 +709,9 @@
         mat4.translate(model_matrix_nave1,model_matrix_nave1,nave1.getPosition());
 		
 		var ejeX=vec3.fromValues(1,0,0);
-		mat4.rotate(model_matrix_nave1,model_matrix_nave1,-Math.PI/4,ejeX);
+		//mat4.rotate(model_matrix_nave1,model_matrix_nave1,-Math.PI/4,ejeX);
 		
-		mat4.rotate(model_matrix_nave1,model_matrix_nave1,Math.PI,[0,1,0]);
+		//mat4.rotate(model_matrix_nave1,model_matrix_nave1,Math.PI,[1,0,0]);
 
 		mat4.multiply(model_matrix_nave1, model_matrix_nave1,nave1.getRotation());//rotacion de la nave
         mat4.scale(model_matrix_nave1, model_matrix_nave1, [0.07, 0.07, 0.07]);
@@ -823,7 +823,7 @@
 
         estacion = new EstructuraCentral(0.05,0.02);
         
-        nave1 = new Nave(0.0);
+        nave1 = new Nave(0.0);		
         nave2 = new Nave(0.25*Math.PI)
 
         gl.clearColor(0.0, 0.0, 0.0, 1.0);

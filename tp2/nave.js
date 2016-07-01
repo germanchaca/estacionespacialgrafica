@@ -58,6 +58,14 @@ var Nave = Conjunto.extend({
 		mat4.scale(transformacionBrazo2,transformacionBrazo2,[0.7,0.7,1]);
 		brazo2.applyMatrix(transformacionBrazo2);
 		this.add(brazo2);
+		
+		var model_matrix_nave1 = mat4.create();
+		var ejeX=vec3.fromValues(1,0,0);
+		//mat4.rotate(model_matrix_nave1,model_matrix_nave1,Math.PI/4,ejeX);
+		mat4.rotate(model_matrix_nave1,model_matrix_nave1,Math.PI,[0,0,1]);
+		mat4.rotate(model_matrix_nave1,model_matrix_nave1,Math.PI,[1,0,0]);
+
+		this.applyMatrix(model_matrix_nave1);
 
 /*
 		var transformacionReceptor = mat4.create();
@@ -74,8 +82,8 @@ var Nave = Conjunto.extend({
 		
 		//console.log("STEP ");
 		angCabezeo=0;
-		angCabezeo=(estadoTeclas[this.TECLA_ARRIBA])? -0.005:angCabezeo;
-		angCabezeo=(estadoTeclas[this.TECLA_ABAJO])?   0.005:angCabezeo;		
+		angCabezeo=(estadoTeclas[this.TECLA_ARRIBA])? 0.005:angCabezeo;
+		angCabezeo=(estadoTeclas[this.TECLA_ABAJO])?   -0.005:angCabezeo;		
 
 		
 		angRolido=0;
